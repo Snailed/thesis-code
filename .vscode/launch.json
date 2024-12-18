@@ -1,0 +1,62 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File with Arguments",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "${command:pickArgs}"
+            ]
+        },
+        {
+            "name": "Small measurement",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "cwd": "${cwd}/prep-project",
+            "args": [
+                "--dataset=SineRegression",
+                "--experiment=HMC",
+                "--num_samples=50",
+                "--num_chains=5",
+                "--model",
+                "Exp2Reg_4_deep_20_wide",
+                "Exp2Circ_4_deep_20_wide",
+                "--num_warmup=50"
+            ]
+        },
+        {
+            "name": "Dry run",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "cwd": "${cwd}/prep-project",
+            "args": [
+                "--dry_run=True",
+                "--dataset=SineRegression",
+                "--experiment=HMC",
+                "--model",
+                "Exp1Reg_1_deep",
+                "Exp1Reg_2_deep",
+                "Exp1Reg_4_deep",
+                "Exp1Reg_8_deep",
+                "Exp1Circ_1_deep",
+                "Exp1Circ_2_deep",
+                "Exp1Circ_3_deep",
+                "Exp1Circ_4_deep",
+                "Exp1Circ_5_deep",
+                "Exp1Circ_6_deep",
+                "Exp1Circ_7_deep",
+                "Exp1Circ_8_deep",
+            ]
+        }
+    ]
+}
