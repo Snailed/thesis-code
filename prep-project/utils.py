@@ -2,17 +2,17 @@ import os
 import pandas as pd
 import arviz as az
 import matplotlib.pyplot as plt
+from numpyro.infer import init_to_mean, init_to_sample, init_to_uniform
 
 def save_txt(save_dir, folder_name, file_name, content: str):
     path = save_dir
     if os.path.exists(path) and os.path.isdir(path):
         path = os.path.join(path, folder_name)
-        if os.path.exists(path):
-            path = os.path.join(path, file_name)
-            with open(path, "w") as f:
-                f.write(content)
-        else:
+        if not os.path.exists(path):
             os.mkdir(path)
+        path = os.path.join(path, file_name)
+        with open(path, "w") as f:
+            f.write(content)
     else:
         raise Exception("Save directory does not exist")
 
@@ -80,3 +80,14 @@ def get_model_depth(model_name):
     deep_index = split.index("deep")
     depth = int(split[deep_index - 1])
     return depth
+
+def get_init_strategy(args):
+    if args.init_strategy == "init_to_mean":
+        return init_to_mean
+    elif args.init_strategy == "init_to_sample":
+        return init_to_sample
+    else:
+        return init_to_uniform
+
+def get_num_params(mcmc):
+    return sum([v.size for v in mcmc.get_samples().values()])

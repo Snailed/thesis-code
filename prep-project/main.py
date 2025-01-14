@@ -4,6 +4,7 @@ from dataset import *
 from model import *
 from experiment import *
 from datetime import datetime
+import json
 import os
 
 from typing import List
@@ -22,13 +23,14 @@ if __name__=="__main__":
     parser.add_argument("--save_dir", type=str) # Where to save is --save is enabled
     parser.add_argument("--show", type=bool, default=True)
     parser.add_argument("--metrics", type=str, nargs="+", default=["MSE"])
+    parser.add_argument("--init_strategy", type=str, default="init_to_mean")
     args = parser.parse_args()
 
     # Set dry run args (overriding)
     if args.dry_run:
         args.num_samples = 20 
-        args.num_warmup = 10
-        args.num_chains = 1
+        args.num_warmup = 20 
+        #args.num_chains = 1
     
     if args.num_chains > 1:
         numpyro.set_host_device_count(args.num_chains)
@@ -42,6 +44,9 @@ if __name__=="__main__":
             os.mkdir(args.save_dir)
         else:
             raise Exception("Save directory already exists, exiting...")
+    
+        with open(os.path.join(args.save_dir, "args.txt"), "w") as f:
+            f.write(json.dumps(vars(args)))
 
     key = random.PRNGKey(args.seed)
     key, *key_list = random.split(key, len(args.dataset) + 1)
