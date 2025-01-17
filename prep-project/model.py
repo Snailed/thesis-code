@@ -29,7 +29,7 @@ def SimpleBNN_1_deep(X, Y=None, sigma=None):
     return SimpleBNN(X, Y=Y, D_H=20, sigma=sigma)
 
 
-def RegularBNN(X, Y=None, D_H=2, D_Y=1, depth=1, sigma=None):
+def BNN(X, Y=None, D_H=2, D_Y=1, depth=1, sigma=None):
     N, D_X = X.shape[-2], X.shape[-1]
     D_in = D_X
     D_out = D_H
@@ -73,7 +73,7 @@ def expand_roll(w):
     #D = w.shape[axis]
     #return jnp.array([w[(i + r) % D] for i in range(D)])
 
-def CirculantBNN(X, Y=None, D_H=2, depth=2, D_Y=1, sigma=None):
+def WBNN(X, Y=None, D_H=2, depth=2, D_Y=1, sigma=None):
     N, D_X = X.shape[-2], X.shape[-1]
     assert depth >= 0
     #w_sampled = expand_roll(sample("w", dist.Normal(jnp.zeros(D_H), jnp.ones(D_H))))
@@ -106,7 +106,7 @@ def CirculantBNN(X, Y=None, D_H=2, depth=2, D_Y=1, sigma=None):
     with numpyro.plate("data", N):
         return sample("Y", dist.Normal(z_prime, sigma_obs).to_event(1), obs=Y)
 
-def OldCirculantBNN(X, Y=None, D_H=2, depth=2, D_Y=1, sigma=None):
+def OldWBNN(X, Y=None, D_H=2, depth=2, D_Y=1, sigma=None):
     N, D_X = X.shape[-2], X.shape[-1]
     assert depth >= 0
     w_sampled = expand_roll(sample("w", dist.Normal(jnp.zeros(D_H), jnp.ones(D_H))))
@@ -136,75 +136,100 @@ def OldCirculantBNN(X, Y=None, D_H=2, depth=2, D_Y=1, sigma=None):
         return sample("Y", dist.Normal(z_prime, sigma_obs).to_event(1), obs=Y)
 
 
-def CirculantBNN_medium_width(X, Y=None, sigma=None):
-    return CirculantBNN(X, Y=Y, D_H=20, sigma=sigma)
+def WBNN_medium_width(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=20, sigma=sigma)
 
-def CirculantBNN_large_width(X, Y=None, sigma=None):
-    return CirculantBNN(X, Y=Y, D_H=40, sigma=sigma)
+def WBNN_large_width(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=40, sigma=sigma)
 
-def CirculantBNN_medium_width_3_deep(X, Y=None, sigma=None):
-    return CirculantBNN(X, Y=Y, D_H=20, depth=3, sigma=sigma)
+def WBNN_medium_width_3_deep(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=20, depth=3, sigma=sigma)
 
-def CirculantBNN_medium_width_4_deep(X, Y=None, sigma=None):
-    return CirculantBNN(X, Y=Y, D_H=20, depth=4, sigma=sigma)
+def WBNN_medium_width_4_deep(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=20, depth=4, sigma=sigma)
 
-def Exp1Reg_1_deep(X, Y=None, sigma=None):
-    return RegularBNN(X, Y=Y, D_H=8, D_Y=1, depth=1, sigma=sigma)
+def Exp1BNN_1_deep_4_wide(X, Y=None, sigma=None):
+    return BNN(X, Y=Y, D_H=4, D_Y=1, depth=1, sigma=sigma)
 
-def Exp1Reg_2_deep(X, Y=None, sigma=None):
-    return RegularBNN(X, Y=Y, D_H=8, D_Y=1, depth=2, sigma=sigma)
+def Exp1BNN_2_deep_4_wide(X, Y=None, sigma=None):
+    return BNN(X, Y=Y, D_H=4, D_Y=1, depth=2, sigma=sigma)
 
-def Exp1Reg_3_deep(X, Y=None, sigma=None):
-    return RegularBNN(X, Y=Y, D_H=8, D_Y=1, depth=3, sigma=sigma)
+def Exp1BNN_3_deep_4_wide(X, Y=None, sigma=None):
+    return BNN(X, Y=Y, D_H=4, D_Y=1, depth=3, sigma=sigma)
 
-def Exp1Reg_4_deep(X, Y=None, sigma=None):
-    return RegularBNN(X, Y=Y, D_H=8, D_Y=1, depth=4, sigma=sigma)
+def Exp1BNN_4_deep_4_wide(X, Y=None, sigma=None):
+    return BNN(X, Y=Y, D_H=4, D_Y=1, depth=4, sigma=sigma)
 
-def Exp1Circ_1_deep(X, Y=None, sigma=None):
-    return CirculantBNN(X, Y=Y, D_H=8, depth=1, sigma=sigma)
+def Exp1WBNN_1_deep_4_wide(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=4, depth=1, sigma=sigma)
 
-def Exp1Circ_2_deep(X, Y=None, sigma=None):
-    return CirculantBNN(X, Y=Y, D_H=8, depth=2, sigma=sigma)
+def Exp1WBNN_2_deep_4_wide(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=4, depth=2, sigma=sigma)
 
-def Exp1Circ_3_deep(X, Y=None, sigma=None):
-    return CirculantBNN(X, Y=Y, D_H=8, depth=3, sigma=sigma)
+def Exp1WBNN_3_deep_4_wide(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=4, depth=3, sigma=sigma)
 
-def Exp1Circ_4_deep(X, Y=None, sigma=None):
-    return CirculantBNN(X, Y=Y, D_H=8, depth=4, sigma=sigma)
+def Exp1WBNN_4_deep_4_wide(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=4, depth=4, sigma=sigma)
 
-def Exp1Circ_8_deep(X, Y=None, sigma=None):
-    return CirculantBNN(X, Y=Y, D_H=8, depth=4, sigma=sigma)
+def Exp1BNN_1_deep_8_wide(X, Y=None, sigma=None):
+    return BNN(X, Y=Y, D_H=8, D_Y=1, depth=1, sigma=sigma)
 
-def SimpleCirc_2_deep_4_wide(X, Y=None, sigma=None):
-    return CirculantBNN(X, Y=Y, D_H=4, D_Y=1, depth=2, sigma=sigma)
-def OldCirc_2_deep_4_wide(X, Y=None, sigma=None):
-    return OldCirculantBNN(X, Y=Y, D_H=4, D_Y=1, depth=2, sigma=sigma)
-def SimpleReg_2_deep_4_wide(X, Y=None, sigma=None):
-    return RegularBNN(X, Y=Y, D_H=4, D_Y=1, depth=2, sigma=sigma)
-def SimpleReg_3_deep_4_wide(X, Y=None, sigma=None):
-    return RegularBNN(X, Y=Y, D_H=4, D_Y=1, depth=3, sigma=sigma)
+def Exp1BNN_2_deep_8_wide(X, Y=None, sigma=None):
+    return BNN(X, Y=Y, D_H=8, D_Y=1, depth=2, sigma=sigma)
 
-def Exp2Reg_3_deep_20_wide(X, Y=None, sigma=None):
-    return RegularBNN(X, Y=Y, D_H=8, D_Y=1, depth=3, sigma=sigma)
+def Exp1BNN_3_deep_8_wide(X, Y=None, sigma=None):
+    return BNN(X, Y=Y, D_H=8, D_Y=1, depth=3, sigma=sigma)
 
-def Exp2Circ_3_deep_20_wide(X, Y=None, sigma=None):
-    return CirculantBNN(X, Y=Y, D_H=20, D_Y=1, depth=3, sigma=sigma)
+def Exp1BNN_4_deep_8_wide(X, Y=None, sigma=None):
+    return BNN(X, Y=Y, D_H=8, D_Y=1, depth=4, sigma=sigma)
+
+def Exp1WBNN_1_deep_8_wide(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=8, depth=1, sigma=sigma)
+
+def Exp1WBNN_2_deep_8_wide(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=8, depth=2, sigma=sigma)
+
+def Exp1WBNN_3_deep_8_wide(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=8, depth=3, sigma=sigma)
+
+def Exp1WBNN_4_deep_8_wide(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=8, depth=4, sigma=sigma)
+
+def OldWBNN_2_deep_4_wide(X, Y=None, sigma=None):
+    return OldWBNN(X, Y=Y, D_H=4, D_Y=1, depth=2, sigma=sigma)
+def SimpleBNN_2_deep_4_wide(X, Y=None, sigma=None):
+    return BNN(X, Y=Y, D_H=4, D_Y=1, depth=2, sigma=sigma)
+def SimpleBNN_3_deep_4_wide(X, Y=None, sigma=None):
+    return BNN(X, Y=Y, D_H=4, D_Y=1, depth=3, sigma=sigma)
+def SimpleWBNN_2_deep_4_wide(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=4, D_Y=1, depth=2, sigma=sigma)
+def SimpleWBNN_3_deep_4_wide(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=4, D_Y=1, depth=2, sigma=sigma)
+
+def Exp2BNN_3_deep_20_wide(X, Y=None, sigma=None):
+    return BNN(X, Y=Y, D_H=8, D_Y=1, depth=3, sigma=sigma)
+
+def Exp2WBNN_3_deep_20_wide(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=20, D_Y=1, depth=3, sigma=sigma)
 
 
-def Exp2Reg_2_deep(X, Y=None, sigma=None):
-    return RegularBNN(X, Y=Y, D_H=16, D_Y=1, depth=2, sigma=sigma)
+def Exp2BNN_2_deep(X, Y=None, sigma=None):
+    return BNN(X, Y=Y, D_H=16, D_Y=1, depth=2, sigma=sigma)
 
-def Exp2Reg_3_deep(X, Y=None, sigma=None):
-    return RegularBNN(X, Y=Y, D_H=16, D_Y=1, depth=3, sigma=sigma)
+def Exp2BNN_3_deep(X, Y=None, sigma=None):
+    return BNN(X, Y=Y, D_H=16, D_Y=1, depth=3, sigma=sigma)
 
-def Exp2Reg_4_deep(X, Y=None, sigma=None):
-    return RegularBNN(X, Y=Y, D_H=16, D_Y=1, depth=4, sigma=sigma)
+def Exp2BNN_4_deep(X, Y=None, sigma=None):
+    return BNN(X, Y=Y, D_H=16, D_Y=1, depth=4, sigma=sigma)
 
-def Exp2Circ_2_deep(X, Y=None, sigma=None):
-    return CirculantBNN(X, Y=Y, D_H=32, depth=2, sigma=sigma)
+def Exp2WBNN_2_deep(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=32, depth=2, sigma=sigma)
 
-def Exp2Circ_3_deep(X, Y=None, sigma=None):
-    return CirculantBNN(X, Y=Y, D_H=16, depth=3, sigma=sigma)
+def Exp2WBNN_3_deep(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=16, depth=3, sigma=sigma)
 
-def Exp2Circ_4_deep(X, Y=None, sigma=None):
-    return CirculantBNN(X, Y=Y, D_H=544, depth=4, sigma=sigma)
+def Exp2WBNN_4_deep(X, Y=None, sigma=None):
+    return WBNN(X, Y=Y, D_H=544, depth=4, sigma=sigma)
+
+

@@ -11,7 +11,7 @@ from typing import List
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dry_run", type=bool, default=False)
+    parser.add_argument("--dry_run", action=argparse.BooleanOptionalAction)
     parser.add_argument("--dataset", nargs="+", type=str, default=["SineRegression"])
     parser.add_argument("--model", nargs="+", type=str, default=["SimpleBNN"])
     parser.add_argument("--experiment", nargs="+", type=str, default=["HMCInfer"])
@@ -21,7 +21,7 @@ if __name__=="__main__":
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--save", type=bool, default=False) # Defaults to True when dry_run == False
     parser.add_argument("--save_dir", type=str) # Where to save is --save is enabled
-    parser.add_argument("--show", type=bool, default=True)
+    parser.add_argument("--show", action=argparse.BooleanOptionalAction)
     parser.add_argument("--metrics", type=str, nargs="+", default=["MSE"])
     parser.add_argument("--init_strategy", type=str, default="init_to_mean")
     args = parser.parse_args()
@@ -30,6 +30,7 @@ if __name__=="__main__":
     if args.dry_run:
         args.num_samples = 20 
         args.num_warmup = 20 
+        args.show = True
         #args.num_chains = 1
     
     if args.num_chains > 1:

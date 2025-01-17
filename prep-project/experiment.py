@@ -9,11 +9,13 @@ import jax.numpy as jnp
 import numpy as np
 import os
 from utils import save_txt, save_csv, save_arviz_posterior, save_arviz_p_value, colour_map, get_model_depth, save_fig, get_init_strategy, get_num_params
-from plotting import plot_comparative_boxplots, plot_comparative_bars, plot_comparative_violinplots, plot_seperate_violinplots, plot_seperate_bars, plot_line
 import pandas as pd
 import arviz as az
 import time
 import json
+from plotting import plot_comparative_boxplots, plot_comparative_bars, plot_comparative_violinplots, plot_seperate_violinplots, plot_seperate_bars, plot_line
+import re
+import seaborn as sns
 
 class Experiment(ABC):
     def run(self, rng_key, model, dataset, args):
@@ -133,7 +135,6 @@ class HMC(Experiment):
             mcmcs += [mcmc]
             durations += [duration]
         rng_key, ll_key, loo_key, waic_key, prior_predictive_key, posterior_predictive_key = random.split(rng_key, 6)
-        self.plot_log_likelihood(ll_key, models, mcmcs, depths, args)
         self.plot_log_likelihood_per_param(ll_key, models, mcmcs, depths, args)
         self.plot_loo(loo_key, models, mcmcs, depths, args)
         self.plot_waic(waic_key, models, mcmcs, depths, args)
@@ -181,10 +182,12 @@ class HMC(Experiment):
                 dicts += [{
                             "depth": depths[i], 
                             "loo": loo["elpd_loo"], 
-                            "circulant": "Circ" in models[i].__name__
+                            "width": re.search(r"(\d+)\_wide", models[i].__name__).group(1),
+                            "weight tied": "WBNN" in models[i].__name__
                         }]
+        fig, ax = plt.subplots()
         df = pd.DataFrame(dicts)
-        fig, axs = plot_seperate_bars(df, "depth", "loo")
+        plot_line(ax, df, "depth", "loo")
 
         if args.save:
             fig.tight_layout()
@@ -199,10 +202,12 @@ class HMC(Experiment):
                 dicts += [{
                             "depth": depths[i], 
                             "waic": waic["elpd_waic"], 
-                            "circulant": "Circ" in models[i].__name__
+                            "width": re.search(r"(\d+)\_wide", models[i].__name__).group(1),
+                            "weight tied": "WBNN" in models[i].__name__
                         }]
+        fig, ax = plt.subplots()
         df = pd.DataFrame(dicts)
-        fig, axs = plot_seperate_bars(df, "depth", "waic")
+        plot_line(ax, df, "depth", "waic")
 
         if args.save:
             fig.tight_layout()
@@ -217,35 +222,43 @@ class HMC(Experiment):
                 dicts += [{
                             "depth": depths[i],
                             "# RVs": get_num_params(mcmc), 
+                            "width": re.search(r"(\d+)\_wide", models[i].__name__).group(1),
                             "log likelihood": float(np.array(ll["Y"][chain].mean())), 
-                            "circulant": "Circ" in models[i].__name__
+                            "weight tied": "WBNN" in models[i].__name__
                         }]
+        df = pd.DataFrame(dicts)
         fig = plt.figure(figsize=(8,8))
         ax = fig.gca()
-        df = pd.DataFrame(dicts)
-        plot_line(ax, df, "# RVs", "log likelihood")
+        plot_line(ax, df.copy(), "# RVs", "log likelihood")
+
+        if args.save:
+            fig.tight_layout()
+            save_fig(args.save_dir, "", "log_likelihood_per_param.png", fig)
+
+        fig, ax = plt.subplots()
+        plot_line(ax, df, "depth", "log likelihood")
 
         if args.save:
             fig.tight_layout()
             save_fig(args.save_dir, "", "log_likelihood.png", fig)
 
-    def plot_log_likelihood(self, rng_key, models, mcmcs, depths, args):
-        dicts = []
-        for i, mcmc in enumerate(mcmcs):
-            inference_data = az.from_numpyro(mcmc, num_chains=args.num_chains)
-            ll = log_likelihood(handlers.seed(models[i], rng_key), mcmc.get_samples(group_by_chain=True), self.dataset.X, self.dataset.Y, self.dataset.sigma, batch_ndims=2)
-            for chain in range(args.num_chains):
-                dicts += [{
-                            "depth": depths[i], 
-                            "log likelihood": float(np.array(ll["Y"][chain].mean())), 
-                            "circulant": "Circ" in models[i].__name__
-                        }]
-        df = pd.DataFrame(dicts)
-        fig, axs = plot_seperate_bars(df, "depth", "log likelihood")
+    # def plot_log_likelihood(self, rng_key, models, mcmcs, depths, args):
+    #     dicts = []
+    #     for i, mcmc in enumerate(mcmcs):
+    #         inference_data = az.from_numpyro(mcmc, num_chains=args.num_chains)
+    #         ll = log_likelihood(handlers.seed(models[i], rng_key), mcmc.get_samples(group_by_chain=True), self.dataset.X, self.dataset.Y, self.dataset.sigma, batch_ndims=2)
+    #         for chain in range(args.num_chains):
+    #             dicts += [{
+    #                         "depth": depths[i], 
+    #                         "log likelihood": float(np.array(ll["Y"][chain].mean())), 
+    #                         "weight tied": "WBNN" in models[i].__name__
+    #                     }]
+    #     df = pd.DataFrame(dicts)
+    #     fig, axs = plot_seperate_bars(df, "depth", "log likelihood")
 
-        if args.save:
-            fig.tight_layout()
-            save_fig(args.save_dir, "", "log_likelihood.png", fig)
+    #     if args.save:
+    #         fig.tight_layout()
+    #         save_fig(args.save_dir, "", "log_likelihood.png", fig)
     def _plot_predictive(self, ax, predictions):
         ax.plot(self.dataset.X, self.dataset.Y, "ko", markersize=3)
         ax.plot(self.dataset.x_true, self.dataset.y_true)
@@ -321,9 +334,10 @@ class HMC(Experiment):
                 total_samples = args.num_samples + args.num_warmup
                 dicts += [{
                             "depth": depths[i], 
+                            "width": re.search(r"(\d+)\_wide", models[i].__name__).group(1),
                             "duration": durations[i], 
                             "throughput": total_samples/durations[i],
-                            "circulant": "Circ" in models[i].__name__
+                            "weight tied": "WBNN" in models[i].__name__
                         }]
         df = pd.DataFrame(dicts)
         fig = plt.figure()
@@ -348,9 +362,10 @@ class HMC(Experiment):
             for chain in range(args.num_chains):
                 dicts += [{
                             "depth": depths[i], 
+                            "width": re.search(r"(\d+)\_wide", models[i].__name__).group(1),
                             "Mean r-hat": rhat.mean(),  # R-hat needs multiple chains to make sense
                             "Mean ESS": np.array(az.ess(inference_data.sel(chains=[chain])).to_dataarray()).mean(),
-                            "circulant": "Circ" in models[i].__name__
+                            "weight tied": "WBNN" in models[i].__name__
                         }]
         df = pd.DataFrame(dicts)
         fig = plt.figure()
@@ -379,13 +394,13 @@ class HMC(Experiment):
         #     r_hats += [r_hat.mean().mean()]
         #     n_effs += [n_eff.mean().mean()]
 
-        # circulant_indices = [i for i, model in enumerate(models) if "Circ" in model.__name__]
-        # non_circulant_indices = [i for i, model in enumerate(models) if "Circ" not in model.__name__]
+        # weight tied_indices = [i for i, model in enumerate(models) if "WBNN" in model.__name__]
+        # non_weight tied_indices = [i for i, model in enumerate(models) if "WBNN" not in model.__name__]
 
         # fig = plt.figure()
         # ax = fig.gca()
-        # ax.plot([depths[i] for i in circulant_indices], [r_hats[i] for i in circulant_indices], "^-", label="Circulant")
-        # ax.plot([depths[i] for i in non_circulant_indices], [r_hats[i] for i in non_circulant_indices], "^-", label="Regular")
+        # ax.plot([depths[i] for i in weight tied_indices], [r_hats[i] for i in weight tied_indices], "^-", label="weight tied")
+        # ax.plot([depths[i] for i in non_weight tied_indices], [r_hats[i] for i in non_weight tied_indices], "^-", label="Regular")
         # ax.plot(jnp.arange(0, max(depths)), jnp.ones(max(depths)), "--", color="gray", alpha=0.5)
         # ax.set_xlabel("Depth")
         # ax.set_ylabel("$\hat{r}$")
@@ -396,8 +411,8 @@ class HMC(Experiment):
 
         # fig = plt.figure()
         # ax = fig.gca()
-        # ax.plot([depths[i] for i in circulant_indices], [n_effs[i] for i in circulant_indices], "^-", label="Circulant")
-        # ax.plot([depths[i] for i in non_circulant_indices], [n_effs[i] for i in non_circulant_indices], "^-", label="Regular")
+        # ax.plot([depths[i] for i in weight tied_indices], [n_effs[i] for i in weight tied_indices], "^-", label="weight tied")
+        # ax.plot([depths[i] for i in non_weight tied_indices], [n_effs[i] for i in non_weight tied_indices], "^-", label="Regular")
         # ax.set_xlabel("Depth")
         # ax.set_ylabel("ESS")
         # ax.legend()
@@ -411,13 +426,13 @@ class HMC(Experiment):
         #     r_hats += [r_hat.mean().mean()]
         #     n_effs += [n_eff.mean().mean()]
 
-        # circulant_indices = [i for i, model in enumerate(models) if "Circ" in model.__name__]
-        # non_circulant_indices = [i for i, model in enumerate(models) if "Circ" not in model.__name__]
+        # weight tied_indices = [i for i, model in enumerate(models) if "WBNN" in model.__name__]
+        # non_weight tied_indices = [i for i, model in enumerate(models) if "WBNN" not in model.__name__]
 
         # fig = plt.figure()
         # ax = fig.gca()
-        # ax.plot([depths[i] for i in circulant_indices], [r_hats[i] for i in circulant_indices], "^-", label="Circulant")
-        # ax.plot([depths[i] for i in non_circulant_indices], [r_hats[i] for i in non_circulant_indices], "^-", label="Regular")
+        # ax.plot([depths[i] for i in weight tied_indices], [r_hats[i] for i in weight tied_indices], "^-", label="weight tied")
+        # ax.plot([depths[i] for i in non_weight tied_indices], [r_hats[i] for i in non_weight tied_indices], "^-", label="Regular")
         # ax.plot(jnp.arange(0, max(depths)), jnp.ones(max(depths)), "--", color="gray", alpha=0.5)
         # ax.set_xlabel("Depth")
         # ax.set_ylabel("$\hat{r}$")
@@ -428,11 +443,105 @@ class HMC(Experiment):
 
         # fig = plt.figure()
         # ax = fig.gca()
-        # ax.plot([depths[i] for i in circulant_indices], [n_effs[i] for i in circulant_indices], "^-", label="Circulant")
-        # ax.plot([depths[i] for i in non_circulant_indices], [n_effs[i] for i in non_circulant_indices], "^-", label="Regular")
+        # ax.plot([depths[i] for i in weight tied_indices], [n_effs[i] for i in weight tied_indices], "^-", label="weight tied")
+        # ax.plot([depths[i] for i in non_weight tied_indices], [n_effs[i] for i in non_weight tied_indices], "^-", label="Regular")
         # ax.set_xlabel("Depth")
         # ax.set_ylabel("ESS")
         # ax.legend()
         
       #  if args.save:
       #      save_fig(args.save_dir, "", "n_eff.png", fig)
+
+class SVI_Exp(Experiment):
+    def run(self, rng_key, models, datasets, args):
+        assert args.dataset == ["SineRegression"]
+        self.dataset = datasets[0]
+        svis = []
+        guides = []
+        depths = []
+        durations = []
+        for model in models:
+            depths += [get_model_depth(model.__name__)]
+
+        rng_key, *keys = random.split(rng_key, len(models) + 1)
+        for model, key in zip(models, keys):
+            svi, guide, duration = self.svi(key, model, self.dataset, args)
+            svis += [svi]
+            guides += [guide]
+            durations += [duration]
+        rng_key, ll_key, loo_key, waic_key, prior_predictive_key, posterior_predictive_key = random.split(rng_key, 6)
+        self.plot_log_likelihood(ll_key, models, svis, guides, depths, args)
+        self.plot_loss(ll_key, models, svis, guides, depths, args)
+        self.plot_duration(models, depths, durations, args)
+        if args.show:
+            plt.show()
+    
+    def svi(self, rng_key, model, dataset, args):
+        guide = autoguide.AutoDelta(model)
+        optimizer = numpyro.optim.Adam(0.001)
+        svi = SVI(model, guide, optimizer, Trace_ELBO())
+        time_before = time.time()
+        svi_results = svi.run(rng_key, 20_000, X=dataset.X, Y=dataset.Y, sigma=dataset.sigma)
+        time_after = time.time()
+        delta = time_after - time_before
+        return svi_results, guide, delta
+    
+    def plot_log_likelihood(self, rng_key, models, svis, guides, depths, args):
+        dicts = []
+        keys = random.split(rng_key, len(models))
+        for i, (svi, guide) in enumerate(zip(svis, guides)):
+            posterior_samples = Predictive(guide, params=svi.params, num_samples=1000)(keys[i])
+            ll = log_likelihood(handlers.seed(models[i], rng_key), posterior_samples, self.dataset.X, self.dataset.Y, sigma=self.dataset.sigma,batch_ndims=1)
+            dicts += [{
+                        "depth": depths[i],
+                        "width": re.search(r"(\d+)\_wide", models[i].__name__).group(1),
+                        "log likelihood": float(np.array(ll["Y"].mean())), 
+                        "weight tied": "WBNN" in models[i].__name__
+                    }]
+        df = pd.DataFrame(dicts)
+        fig, ax = plt.subplots()
+        plot_line(ax, df, "depth", "log likelihood")
+
+        if args.save:
+            fig.tight_layout()
+            save_fig(args.save_dir, "", "log_likelihood.png", fig)
+
+    def plot_loss(self, rng_key, models, svis, guides, depths, args):
+        dicts = []
+        keys = random.split(rng_key, len(models))
+        for i, (svi, guide) in enumerate(zip(svis, guides)):
+            for step in range(0,len(svi.losses),10):
+                dicts += [{
+                            "depth": depths[i],
+                            "width": re.search(r"(\d+)\_wide", models[i].__name__).group(1),
+                            "step": step,
+                            "loss": float(svi.losses[step]), 
+                            "weight tied": "WBNN" in models[i].__name__
+                        }]
+        df = pd.DataFrame(dicts)
+        fig, ax = plt.subplots()
+        ax.set_yscale("log")
+        df["weight tied"] = df["weight tied"].apply(lambda x: "WBNN" if x else "BNN")
+        df["width and depth"] = "W=" + df["width"].astype(str) + ", D=" + df["depth"].astype(str)
+        sns.lineplot(ax=ax, data=df, x="step", y="loss", hue="width and depth", style="weight tied", markers=False, estimator=None)
+
+        if args.save:
+            fig.tight_layout()
+            save_fig(args.save_dir, "", "loss.png", fig)
+    
+    def plot_duration(self, models, depths, durations, args):
+        dicts = []
+        for i, model in enumerate(models):
+            dicts += [{
+                        "depth": depths[i], 
+                        "width": re.search(r"(\d+)\_wide", models[i].__name__).group(1),
+                        "duration": durations[i], 
+                        "weight tied": "WBNN" in models[i].__name__
+                    }]
+        df = pd.DataFrame(dicts)
+        fig = plt.figure()
+        ax = fig.gca()
+        plot_comparative_bars(ax, df.copy(), "depth", "duration")
+
+        if args.save:
+            save_fig(args.save_dir, "", "duration.png", fig)

@@ -70,7 +70,7 @@ def save_fig(save_dir, folder_name, file_name, fig):
         raise Exception("Save directory does not exist")
 
 def colour_map(name):
-    if "Circulant" in name:
+    if "WBNN" in name:
         return "orange"
     else:
         return "blue"
@@ -90,4 +90,4 @@ def get_init_strategy(args):
         return init_to_uniform
 
 def get_num_params(mcmc):
-    return sum([v.size for v in mcmc.get_samples().values()])
+    return sum([v.shape[-1] for v in mcmc.get_samples().values()])
