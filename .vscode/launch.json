@@ -1,0 +1,40 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File with Arguments",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "${command:pickArgs}"
+            ]
+        },
+        {
+            "name": "Dry Run",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "code/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "sample",
+                "--dataset",
+                "boston-housing",
+                "concrete",
+                "energy",
+                "--model",
+                "UCI_BNN_2_50",
+                "--n_samples",
+                "150",
+                "--n_warmup",
+                "50",
+                "--seed",
+                "10"
+            ]
+        }
+    ]
+}
