@@ -29,11 +29,29 @@
                 "--model",
                 "UCI_BNN_2_50",
                 "--n_samples",
-                "150",
+                "3000",
                 "--n_warmup",
-                "50",
+                "500",
                 "--seed",
                 "10"
+            ]
+        },
+        {
+            "name": "MAP",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "code/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "map",
+                "--dataset",
+                "boston-housing",
+                "--model",
+                "UCI_BNN_2_50",
+                "--n_steps",
+                "10000",
+                "--seed",
+                "42"
             ]
         }
     ]

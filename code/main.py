@@ -6,14 +6,16 @@ from datasets.uci import UCIDataset, dataset_names
 import matplotlib.pyplot as plt
 import bnns.model_configs
 from sample import save_mcmc, run_hmc, save_metadata
+from svi import run_svi, save_svi
 
-def sample(args):
+def _mkdir_sample_dir(args):
     # Make write directory
     args.write_dir = os.path.join("samples", datetime.now().isoformat())
     os.mkdir(args.write_dir) 
     with open(os.path.join(args.write_dir, "args.txt"), "w") as f:
         f.write(str(args.__dict__))
-    
+
+def _load_datasets(args):
     # Load datasets
     datasets = []
     if len(datasets) == 1 and datasets[0] == "all":
@@ -23,7 +25,9 @@ def sample(args):
             datasets.append(UCIDataset(dataset))
         elif dataset == "synthetic":
             datasets.append(SyntheticDataset())
-    
+    return datasets
+
+def _load_models(args):
     # Load models
     models = []
     model_names = [name for name in dir(bnns.model_configs)]
@@ -34,7 +38,12 @@ def sample(args):
             models.append(model_list[index])
         except ValueError:
             raise ValueError(f"Model {model_name} not found")
+    return models, model_names
 
+def sample(args):
+    _mkdir_sample_dir(args)
+    datasets = _load_datasets(args)
+    models, model_names = _load_models(args)
 
     # Sample
     for dataset in datasets:
@@ -47,6 +56,19 @@ def sample(args):
                 extra_fields["time_spanned"] = time_spanned
                 save_metadata(model.__name__, dataset.dataset_name, extra_fields, split_ind, args)
 
+def map(args):
+    _mkdir_sample_dir(args)
+    datasets = _load_datasets(args)
+    models, model_names = _load_models(args)
+
+    # MAP-estimate
+    for dataset in datasets:
+        for model in models:
+            for split_ind, split in enumerate(dataset.splits):
+                print("MAP-estimating", model.__name__, "on", dataset.dataset_name, "split", split_ind)
+                svi_result = run_svi(model, dataset, split, args)
+                save_svi(model.__name__, dataset.dataset_name, svi_result, split_ind, args)
+                
 
 def plot(args):
     print("Plot", args)
@@ -67,6 +89,14 @@ def main():
 
     parser_plot = subparsers.add_parser('plot', help='Plot samples')
     parser_plot.set_defaults(func=plot)
+
+    parser_map = subparsers.add_parser('map', help='MAP-estimate')
+    parser_map.add_argument('--n_steps', type=int, default=1000, help='Number of optimization steps')
+    parser_map.add_argument('--learning_rate', type=float, default=0.005, help='Learning rate')
+    parser_map.add_argument('--models', nargs='+', default=[], help='Models to sample from')
+    parser_map.add_argument('--dataset', nargs='+', default=["synthetic"], help='Datasets to sample from')
+    parser_map.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
+    parser_map.set_defaults(func=map)
 
     args = parser.parse_args()
     args.func(args)
