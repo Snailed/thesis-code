@@ -9,7 +9,15 @@ from time import time
 
 def run_hmc(model, dataset, split, args, post_warmup_state=None):
     kernel = NUTS(model, init_strategy=numpyro.infer.util.init_to_uniform(radius=0.1))
-    mcmc = MCMC(kernel, num_warmup=args.n_warmup, num_samples=args.n_samples, num_chains=args.n_chains, jit_model_args=True)
+    mcmc = MCMC(
+        kernel, 
+        num_warmup=args.n_warmup, 
+        num_samples=args.n_samples, 
+        num_chains=args.n_chains, 
+        jit_model_args=True, 
+        progress_bar=args.progress_bar,
+        chain_method=args.chain_method
+    )
     if post_warmup_state is not None:
         mcmc.post_warmup_state = post_warmup_state
     rng_key = jax.random.PRNGKey(args.seed)
@@ -25,6 +33,7 @@ def run_hmc(model, dataset, split, args, post_warmup_state=None):
         extra_fields=("adapt_state.step_size", "diverging", "i", "num_steps", "accept_prob", "mean_accept_prob")
     )
     time_spanned = time() - time_before
+    print(f"Finished sampling in {time_spanned:.2f} seconds, with throughput {args.n_samples * args.n_chains / time_spanned:.2f} samples per second")
     return mcmc, time_spanned
 
 def save_mcmc(mcmc, model_name, dataset_name, split_ind: int, args):

@@ -85,6 +85,8 @@ def main():
     parser_sample.add_argument('--models', nargs='+', default=[], help='Models to sample from')
     parser_sample.add_argument('--dataset', nargs='+', default=["synthetic"], help='Datasets to sample from')
     parser_sample.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
+    parser_sample.add_argument("--progress-bar", action="store_true", help="Show progress bar")
+    parser_sample.add_argument("--chain_method", default="parallel", help="MCMC chain method (parallel, sequential, vectorized)")
     parser_sample.set_defaults(func=sample)
 
     parser_plot = subparsers.add_parser('plot', help='Plot samples')
@@ -96,6 +98,7 @@ def main():
     parser_map.add_argument('--models', nargs='+', default=[], help='Models to sample from')
     parser_map.add_argument('--dataset', nargs='+', default=["synthetic"], help='Datasets to sample from')
     parser_map.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
+    parser_map.add_argument("--progress-bar", action="store_true", help="Show progress bar")
     parser_map.set_defaults(func=map)
 
     args = parser.parse_args()

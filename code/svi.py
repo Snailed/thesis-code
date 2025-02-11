@@ -13,7 +13,7 @@ def run_svi(model, dataset, split, args) -> SVIRunResult:
     key = jax.random.PRNGKey(args.seed)
     X = dataset.data[split["tr"]][:,:-1]
     y = dataset.data[split["tr"]][:,-1]
-    svi_result = svi.run(key, args.n_steps, X=X, y=y)
+    svi_result = svi.run(key, args.n_steps, X=X, y=y, progress_bar=args.progress_bar)
     return svi_result
     
 
