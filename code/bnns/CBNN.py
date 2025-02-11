@@ -3,7 +3,7 @@ import numpyro
 import numpyro.distributions as dist
 import jax
 
-def CBNN(X, y=None, depth=1, width=4, sigma=1.0, D_Y=None):
+def CBNN(X, y=None, depth=1, width=4, sigma=1.0, D_Y=None, activation=jnp.tanh):
     # Make sure D_Y is defined
     if y is None and D_Y is None:
         raise ValueError("Either y or D_Y must be provided.")
@@ -25,7 +25,7 @@ def CBNN(X, y=None, depth=1, width=4, sigma=1.0, D_Y=None):
     w = numpyro.sample("w0", dist.Normal(0, 1).expand((D_X, D_Z)))
     b = numpyro.sample("b0", dist.Normal(0, 1).expand((D_Z,)))
     z = X @ w + b
-    z_p = jnp.tanh(z)
+    z_p = activation(z)
 
     # Middle layers:
     for i in range(1, depth):
@@ -34,7 +34,7 @@ def CBNN(X, y=None, depth=1, width=4, sigma=1.0, D_Y=None):
 
         b = numpyro.sample(f"b{i}", dist.Normal(0, 1).expand((D_Z,)))
         z = z_p @ w + b
-        z_p = jnp.tanh(z)
+        z_p = activation(z)
 
     # Last layer
     w = numpyro.sample(f"w{depth}", dist.Normal(0, 1).expand((D_Z, D_Y)))
