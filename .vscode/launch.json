@@ -24,14 +24,12 @@
                 "sample",
                 "--dataset",
                 "boston-housing",
-                "concrete",
-                "energy",
                 "--model",
-                "UCI_BNN_2_50",
+                "UCI_FFT_CBNN_2_50",
                 "--n_samples",
-                "3000",
+                "100",
                 "--n_warmup",
-                "500",
+                "100",
                 "--seed",
                 "10"
             ]

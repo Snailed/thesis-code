@@ -40,7 +40,7 @@ def save_mcmc(mcmc, model_name, dataset_name, split_ind: int, args):
 def save_metadata(model_name: str, dataset_name: str, metadata, split_ind: int, args):
     if not os.path.exists(f"{args.write_dir}/HMC"):
         os.mkdir(f"{args.write_dir}/HMC")
-    if not os.path.exists(f"{args.write_dir}/{dataset_name}"):
+    if not os.path.exists(f"{args.write_dir}/HMC/{dataset_name}"):
         os.mkdir(f"{args.write_dir}/HMC/{dataset_name}")
     with open(f"{args.write_dir}/HMC/{dataset_name}/{model_name}_{split_ind}_metadata.txt", "w") as f:
         f.write(str(metadata))
