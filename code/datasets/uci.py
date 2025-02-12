@@ -13,31 +13,36 @@ class UCIDataset():
         self.dataset_name = dataset_name
         self.splits = _standard_splits[dataset_name]
         self.data = jnp.array(loadtxt(f"{UCI_DIR}/{dataset_name}/data/data.txt"))
-        self.normalize()
         self.X = self.data[:,:-1]
         self.y = self.data[:,-1]
-        # self.X_train = data["tr"][:,:-1]
-        # self.y_train = data["tr"][:,-1]
-        # self.X_val = data["val"][:,:-1]
-        # self.y_val = data["val"][:,-1]
-        # self.X_test = data["te"][:,:-1]
-        # self.y_test = data["te"][:,-1]
-    def normalize(self):
+
+    def normalize_X(self, X, split) -> jnp.array:
+        train_X = X[split["tr"]]
+        val_X = X[split["val"]]
+        test_X = X[split["te"]]
         # Normalize all independent variables per split
         # Training data is used to calculate mean and std, which are then applied to all splits
-        X = self.data[:,:-1]
-        y = self.data[:,-1]
-        for split in self.splits:
-            train_X = X[split["tr"]]
-            val_X = X[split["val"]]
-            test_X = X[split["te"]]
+        mean = train_X.mean(axis=0)
+        std = train_X.std(axis=0)
 
-            mean = train_X.mean(axis=0, keepdims=True)
-            std = train_X.std(axis=0, keepdims=True)
+        X = X.at[split["tr"]].set((train_X - mean) / std)
+        X = X.at[split["val"]].set((val_X - mean) / std)
+        X = X.at[split["te"]].set((test_X - mean) / std)
 
-            X = X.at[split["tr"]].set((train_X - mean) / std)
-            X = X.at[split["val"]].set((val_X - mean) / std)
-            X = X.at[split["te"]].set((test_X - mean) / std)
-        self.data = jnp.concatenate((X, y.reshape(-1, 1)), axis=1)
+        # Validation step
+        train_X = X[split["tr"]]
+        val_X = X[split["val"]]
+        test_X = X[split["te"]]
+        assert np.allclose(train_X.mean(axis=0), 0, atol=1e-2)
+        assert np.allclose(train_X.std(axis=0), 1, atol=1e-2)
+
+        old_train_X = self.data[:,:-1][split["tr"]]
+        old_val_X = self.data[:,:-1][split["val"]]
+        old_test_X = self.data[:,:-1][split["te"]]
+        assert np.allclose(train_X * std + mean, old_train_X, atol=1e-2)
+        assert np.allclose(val_X * std + mean, old_val_X, atol=1e-2)
+        assert np.allclose(test_X * std + mean, old_test_X, atol=1e-2)
+
+        return X
 
             

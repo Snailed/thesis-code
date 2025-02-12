@@ -23,16 +23,17 @@
             "args": [
                 "sample",
                 "--dataset",
-                "synthetic",
+                "boston-housing",
                 "--model",
-                "BNN_2_5",
-                "CBNN_2_5",
+                "UCI_BNN_2_50",
                 "--n_samples",
-                "100",
+                "500",
                 "--n_warmup",
-                "100",
+                "500",
                 "--seed",
-                "10"
+                "10",
+                "--max_splits",
+                "1"
             ]
         },
         {

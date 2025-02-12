@@ -21,7 +21,8 @@ def run_hmc(model, dataset, split, args, post_warmup_state=None):
     if post_warmup_state is not None:
         mcmc.post_warmup_state = post_warmup_state
     rng_key = jax.random.PRNGKey(args.seed)
-    X_train = dataset.X[split["tr"]]
+    X = dataset.normalize_X(dataset.X, split)
+    X_train = X[split["tr"]]
     y_train = dataset.y[split["tr"]]
     time_before = time()
     mcmc.run(

@@ -87,6 +87,7 @@ def main():
     parser_sample.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
     parser_sample.add_argument("--progress-bar", action="store_true", help="Show progress bar")
     parser_sample.add_argument("--chain_method", default="parallel", help="MCMC chain method (parallel, sequential, vectorized)")
+    parser_sample.add_argument("--max_splits", default=20, type=int, help="Maximum number of dataset splits to consider")
     parser_sample.set_defaults(func=sample)
 
     parser_plot = subparsers.add_parser('plot', help='Plot samples')
