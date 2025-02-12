@@ -19,6 +19,11 @@ class SyntheticDataset():
         self.X_test_in, self.y_test_in = self._sample_uniform_clusters(20)
         self.X_test_between, self.y_test_between = self._sample_uniform_interval(-0.5, 1.3, 60)
         self.X_test_entire, self.y_test_entire = self._sample_uniform_interval(*self.X_domain, 120)
+        self.data = jnp.hstack([self.X_train, self.y_train.reshape(-1, 1)])
+        self.X = self.X_train
+        self.y = self.y_train
+        # Use same data for train, val, test split.
+        self.splits = [{"tr": jnp.arange(self.X_train.shape[0]), "val": jnp.arange(self.X_train.shape[0]), "te": jnp.arange(self.X_train.shape[0])}]
 
     
     def _sine_wave_function(self, t):

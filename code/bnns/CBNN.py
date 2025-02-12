@@ -35,7 +35,7 @@ def CBNN(X, y=None, depth=1, width=4, sigma=1.0, D_Y=None, activation=jnp.tanh):
     # Middle layers:
     for i in range(1, depth):
         w_vector = numpyro.sample(f"w{i}", dist.Normal(0, 1).expand((D_Z,)))
-        w = circ_vmap(w_vector.reshape(1,-1), jnp.arange(D_Z))
+        w = circ_vmap(w_vector, jnp.arange(D_Z))
 
         b = numpyro.sample(f"b{i}", dist.Normal(0, 1).expand((D_Z,)))
         z = z_p @ w + b
@@ -45,6 +45,10 @@ def CBNN(X, y=None, depth=1, width=4, sigma=1.0, D_Y=None, activation=jnp.tanh):
     w = numpyro.sample(f"w{depth}", dist.Normal(0, 1).expand((D_Z, D_Y)))
     b = numpyro.sample(f"b{depth}", dist.Normal(0, 1).expand((D_Y,)))
     z = z_p @ w + b
+    if y is not None:
+        assert z.shape == y.shape
+    else:
+        assert z.shape[-1] == D_Y
     with numpyro.plate("data", N):
         return numpyro.sample("y", dist.Normal(z, sigma).to_event(1), obs=y)
 

@@ -23,9 +23,10 @@
             "args": [
                 "sample",
                 "--dataset",
-                "boston-housing",
+                "synthetic",
                 "--model",
-                "UCI_FFT_CBNN_2_50",
+                "BNN_2_5",
+                "CBNN_2_5",
                 "--n_samples",
                 "100",
                 "--n_warmup",
