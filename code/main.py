@@ -49,6 +49,9 @@ def sample(args):
     for dataset in datasets:
         for model in models:
             for split_ind, split in enumerate(dataset.splits):
+                if split_ind < args.start_split:
+                    print("Skipping split", split_ind)
+                    continue
                 if split_ind >= args.max_splits:
                     print("Reached max splits, stopping")
                     break
@@ -91,6 +94,7 @@ def main():
     parser_sample.add_argument("--progress-bar", action="store_true", help="Show progress bar")
     parser_sample.add_argument("--chain_method", default="parallel", help="MCMC chain method (parallel, sequential, vectorized)")
     parser_sample.add_argument("--max_splits", default=20, type=int, help="Maximum number of dataset splits to consider")
+    parser_sample.add_argument("--start_split", default=0, type=int, help="Start from split")
     parser_sample.set_defaults(func=sample)
 
     parser_plot = subparsers.add_parser('plot', help='Plot samples')
