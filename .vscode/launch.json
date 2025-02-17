@@ -26,6 +26,7 @@
                 "boston-housing",
                 "--model",
                 "UCI_BNN_2_50",
+                "UCI_CBNN_2_50",
                 "--n_samples",
                 "500",
                 "--n_warmup",
@@ -33,7 +34,8 @@
                 "--seed",
                 "10",
                 "--max_splits",
-                "1"
+                "1",
+                "--progress-bar"
             ]
         },
         {

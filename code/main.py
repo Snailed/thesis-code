@@ -49,6 +49,9 @@ def sample(args):
     for dataset in datasets:
         for model in models:
             for split_ind, split in enumerate(dataset.splits):
+                if split_ind >= args.max_splits:
+                    print("Reached max splits, stopping")
+                    break
                 print(f"Sampling {model.__name__} on {dataset.dataset_name} split {split_ind}")
                 mcmc, time_spanned = run_hmc(model, dataset, split, args)
                 save_mcmc(mcmc, model.__name__, dataset.dataset_name, split_ind, args)

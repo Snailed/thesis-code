@@ -3,6 +3,7 @@ import numpyro
 import numpyro.distributions as dist
 import jax
 from jax.numpy.fft import fft, ifft
+import jax.nn as nn
 
 @jax.jit
 def circ_mult(w,x): # w is a vector
@@ -50,7 +51,8 @@ def CBNN(X, y=None, depth=1, width=4, sigma=1.0, D_Y=None, activation=jnp.tanh):
     else:
         assert z.shape[-1] == D_Y
     with numpyro.plate("data", N):
-        return numpyro.sample("y", dist.Normal(z, sigma).to_event(1), obs=y)
+        y_loc = numpyro.deterministic("y_loc", z)
+        return numpyro.sample("y", dist.Normal(y_loc, sigma).to_event(1), obs=y)
 
 def FFT_CBNN(X, y=None, depth=1, width=4, sigma=1.0, D_Y=None, activation=jnp.tanh):
     # Make sure D_Y is defined
@@ -88,16 +90,17 @@ def FFT_CBNN(X, y=None, depth=1, width=4, sigma=1.0, D_Y=None, activation=jnp.ta
     # Last layer
     w = numpyro.sample(f"w{depth}", dist.Normal(0, 1).expand((D_Z, D_Y)))
     b = numpyro.sample(f"b{depth}", dist.Normal(0, 1).expand((D_Y,)))
-    z = z_p @ w + b
+    z = (z_p @ w + b).reshape(-1,1)
     with numpyro.plate("data", N):
+        numpyro.deterministic("y_loc", z)
         return numpyro.sample("y", dist.Normal(z, sigma).to_event(1), obs=y)
 
 def UCI_CBNN(X, y=None, depth=2, width=50, D_Y=None):
     prec = numpyro.sample("prec", dist.Gamma(1.0, 0.1))
     _sigma = jnp.sqrt(1 / prec)
-    return CBNN(X, y, depth=depth, width=width, D_Y=D_Y, sigma=_sigma, activation=jnp.tanh)
+    return CBNN(X, y, depth=depth, width=width, D_Y=D_Y, sigma=_sigma, activation=nn.relu)
 
 def UCI_FFT_CBNN(X, y=None, depth=2, width=50, D_Y=None):
     prec = numpyro.sample("prec", dist.Gamma(1.0, 0.1))
     _sigma = jnp.sqrt(1 / prec)
-    return FFT_CBNN(X, y, depth=depth, width=width, D_Y=D_Y, sigma=_sigma, activation=jnp.tanh)
+    return FFT_CBNN(X, y, depth=depth, width=width, D_Y=D_Y, sigma=_sigma, activation=nn.relu)

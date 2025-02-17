@@ -19,30 +19,31 @@ def BNN(X, y=None, depth=1, width=4, sigma=1.0, D_Y=None, activation=jnp.tanh):
         D_Z = D_Y
 
     # First layer
-    w = numpyro.sample("w0", dist.Normal(0, 1).expand((D_X, D_Z)))
-    b = numpyro.sample("b0", dist.Normal(0, 1).expand((D_Z, )))
+    w = numpyro.sample("w0", dist.Normal(0.0, 1).expand((D_X, D_Z)))
+    b = numpyro.sample("b0", dist.Normal(0.0, 1).expand((D_Z, )))
     z = X @ w + b.flatten()
     z_p = activation(z)
 
     # Middle layers:
     for i in range(1, depth):
-        w = numpyro.sample(f"w{i}", dist.Normal(0, 1).expand((D_Z, D_Z)))
-        b = numpyro.sample(f"b{i}", dist.Normal(0, 1).expand((D_Z,)))
+        w = numpyro.sample(f"w{i}", dist.Normal(0.0, 1).expand((D_Z, D_Z)))
+        b = numpyro.sample(f"b{i}", dist.Normal(0.0, 1).expand((D_Z,)))
         z = z_p @ w + b
         z_p = activation(z)
 
     # Last layer
-    w = numpyro.sample(f"w{depth}", dist.Normal(0, 1).expand((D_Z, D_Y)))
-    b = numpyro.sample(f"b{depth}", dist.Normal(0, 1).expand((D_Y,)))
-    z = z_p @ w + b
+    w = numpyro.sample(f"w{depth}", dist.Normal(0.0, 1).expand((D_Z, D_Y)))
+    b = numpyro.sample(f"b{depth}", dist.Normal(0.0, 1).expand((D_Y,)))
+    z = (z_p @ w + b).reshape(-1,1)
     if y is not None:
         assert z.shape == y.shape
     else:
         assert z.shape[-1] == D_Y
     with numpyro.plate("data", N):
-        return numpyro.sample("y", dist.Normal(z, sigma).to_event(1), obs=y)
+        y_loc = numpyro.deterministic("y_loc", z)
+        numpyro.sample("y", dist.Normal(y_loc, sigma).to_event(1), obs=y)
 
 def UCI_BNN(X, y=None, depth=2, width=50, D_Y=None):
     prec = numpyro.sample("prec", dist.Gamma(1.0, 0.1))
     _sigma = jnp.sqrt(1 / prec)
-    return BNN(X, y, depth=depth, width=width, D_Y=D_Y, sigma=_sigma, activation=jnp.tanh)
+    BNN(X, y, depth=depth, width=width, D_Y=D_Y, sigma=_sigma, activation=nn.relu)

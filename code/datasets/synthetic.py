@@ -25,6 +25,8 @@ class SyntheticDataset():
         # Use same data for train, val, test split.
         self.splits = [{"tr": jnp.arange(self.X_train.shape[0]), "val": jnp.arange(self.X_train.shape[0]), "te": jnp.arange(self.X_train.shape[0])}]
 
+    def normalize_X(self, X, split):
+        return X
     
     def _sine_wave_function(self, t):
         amp = 1.5

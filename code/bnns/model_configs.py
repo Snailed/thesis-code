@@ -18,10 +18,10 @@ def CBNN_2_100(X, y=None, D_Y=None, sigma=None):
 
 # UCI dataset models
 def UCI_BNN_2_50(X, y=None, D_Y=None, sigma=None):
-    return UCI_BNN(X, y, depth=3, width=50, D_Y=D_Y)
+    return UCI_BNN(X, y, depth=2, width=50, D_Y=D_Y)
 
 def UCI_CBNN_2_50(X, y=None, D_Y=None, sigma=None):
-    return UCI_CBNN(X, y, depth=3, width=50, D_Y=D_Y)
+    return UCI_CBNN(X, y, depth=2, width=50, D_Y=D_Y)
 
 def UCI_FFT_CBNN_2_50(X, y=None, D_Y=None, sigma=None):
-    return UCI_FFT_CBNN(X, y, depth=3, width=50, D_Y=D_Y)
+    return UCI_FFT_CBNN(X, y, depth=2, width=50, D_Y=D_Y)
