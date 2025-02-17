@@ -6,6 +6,7 @@ import jax
 import arviz as az
 import os
 from time import time
+import dill
 
 def run_hmc(model, dataset, split, args, post_warmup_state=None):
     kernel = NUTS(model, init_strategy=numpyro.infer.util.init_to_uniform(radius=0.1))
@@ -52,6 +53,6 @@ def save_metadata(model_name: str, dataset_name: str, metadata, split_ind: int, 
         os.mkdir(f"{args.write_dir}/HMC")
     if not os.path.exists(f"{args.write_dir}/HMC/{dataset_name}"):
         os.mkdir(f"{args.write_dir}/HMC/{dataset_name}")
-    with open(f"{args.write_dir}/HMC/{dataset_name}/{model_name}_{split_ind}_metadata.txt", "w") as f:
-        f.write(str(metadata))
+    with open(f"{args.write_dir}/HMC/{dataset_name}/{model_name}_{split_ind}_metadata.dill", "w") as f:
+        f.write(dill.dumps(metadata))
     

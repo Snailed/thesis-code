@@ -47,3 +47,9 @@ def UCI_BNN(X, y=None, depth=2, width=50, D_Y=None):
     prec = numpyro.sample("prec", dist.Gamma(1.0, 0.1))
     _sigma = jnp.sqrt(1 / prec)
     BNN(X, y, depth=depth, width=width, D_Y=D_Y, sigma=_sigma, activation=nn.relu)
+
+
+def UCI_BNN_tanh(X, y=None, depth=2, width=50, D_Y=None):
+    prec = numpyro.sample("prec", dist.Gamma(1.0, 0.1))
+    _sigma = jnp.sqrt(1 / prec)
+    BNN(X, y, depth=depth, width=width, D_Y=D_Y, sigma=_sigma, activation=jnp.tanh)
