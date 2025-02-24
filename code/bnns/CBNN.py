@@ -5,6 +5,7 @@ import jax
 from jax.numpy.fft import fft, ifft
 import jax.nn as nn
 
+# TODO: Fix this - it is wrong
 @jax.jit
 def circ_mult(w,x): # w is a vector
     return jnp.real(fft(ifft(x.T)*fft(w)).T)

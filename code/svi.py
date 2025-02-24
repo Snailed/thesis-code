@@ -11,7 +11,8 @@ def run_svi(model, dataset, split, args) -> SVIRunResult:
     guide = AutoDelta(model)
     svi = SVI(model, guide, optimizer, loss=Trace_ELBO())
     key = jax.random.PRNGKey(args.seed)
-    X = dataset.data[split["tr"]][:,:-1]
+    #X = dataset.data[split["tr"]][:,:-1]
+    X = dataset.normalize_X(dataset.data[:,:-1], split)[split["tr"]]
     y = dataset.data[split["tr"]][:,-1]
     svi_result = svi.run(key, args.n_steps, X=X, y=y, progress_bar=args.progress_bar)
     return svi_result
