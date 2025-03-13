@@ -72,7 +72,13 @@ def map(args):
         for model in models:
             for split_ind, split in enumerate(dataset.splits):
                 print("MAP-estimating", model.__name__, "on", dataset.dataset_name, "split", split_ind)
-                svi_result = run_svi(model, dataset, split, args)
+                svi_result, guide = run_svi(model, dataset, split, args)
+                svi_result = {
+                    "params": svi_result.params,
+                    "losses": svi_result.losses,
+                    "state": svi_result.state,
+                    "guide": guide
+                }
                 save_svi(model.__name__, dataset.dataset_name, svi_result, split_ind, args)
                 
 
@@ -107,6 +113,7 @@ def main():
     parser_map.add_argument('--dataset', nargs='+', default=["synthetic"], help='Datasets to sample from')
     parser_map.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
     parser_map.add_argument("--progress-bar", action="store_true", help="Show progress bar")
+    parser_map.add_argument("--subsample-size", type=int, help="Subsample size if supported", default=None)
     parser_map.set_defaults(func=map)
 
     args = parser.parse_args()
