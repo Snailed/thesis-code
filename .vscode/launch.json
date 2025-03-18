@@ -25,16 +25,39 @@
                 "--dataset",
                 "boston-housing",
                 "--model",
-                "UCI_BNN_2_50",
-                "UCI_CBNN_2_50",
+                "UCI_Full_Spectral_BNN_50",
+                "UCI_Spectral_BNN_50",
                 "--n_samples",
-                "500",
+                "1000",
+                "--n_warmup",
+                "300",
+                "--seed",
+                "10",
+                "--max_splits",
+                "1",
+                "--progress-bar"
+            ]
+        },
+        {
+            "name": "Benchmark",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "code/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "sample",
+                "--dataset",
+                "boston-housing",
+                "--model",
+                "UCI_Spectral_BNN_50",
+                "--n_samples",
+                "3000",
                 "--n_warmup",
                 "500",
                 "--seed",
                 "10",
                 "--max_splits",
-                "1",
+                "5",
                 "--progress-bar"
             ]
         },
@@ -49,11 +72,18 @@
                 "--dataset",
                 "boston-housing",
                 "--model",
-                "UCI_BNN_2_50",
+                "UCI_Full_Spectral_BNN_50",
                 "--n_steps",
-                "10000",
+                "60000",
                 "--seed",
-                "42"
+                "42",
+                "--learning_rate",
+                "5e-5",
+                "--progress-bar",
+                "--subsample-size",
+                "100",
+                "--max_splits",
+                "10"
             ]
         }
     ]

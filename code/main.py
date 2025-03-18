@@ -71,6 +71,9 @@ def map(args):
     for dataset in datasets:
         for model in models:
             for split_ind, split in enumerate(dataset.splits):
+                if split_ind >= args.max_splits:
+                    print("Reached max splits, stopping")
+                    break
                 print("MAP-estimating", model.__name__, "on", dataset.dataset_name, "split", split_ind)
                 svi_result, guide = run_svi(model, dataset, split, args)
                 svi_result = {
@@ -114,6 +117,7 @@ def main():
     parser_map.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
     parser_map.add_argument("--progress-bar", action="store_true", help="Show progress bar")
     parser_map.add_argument("--subsample-size", type=int, help="Subsample size if supported", default=None)
+    parser_map.add_argument("--max_splits", default=20, type=int, help="Maximum number of dataset splits to consider")
     parser_map.set_defaults(func=map)
 
     args = parser.parse_args()
