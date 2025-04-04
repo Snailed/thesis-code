@@ -51,10 +51,10 @@ def Ola_BNN(X,y=None, D_Y=None, sigma=None, subsample=None):
     return Ola_model(X, y, width=50, D_Y=D_Y, subsample=subsample)
 
 def ECG_BNN_128(X, y=None, D_Y=None, sigma=None, subsample=None, prior_probs=None):
-    return ECG_BNN(X, y, width=8, subsample=subsample, prior_probs=prior_probs)
+    return ECG_BNN(X, y, width=128, subsample=subsample, prior_probs=prior_probs)
 
 def ECG_CBNN_128(X, y=None, D_Y=None, sigma=None, subsample=None, prior_probs=None):
-    return ECG_CBNN(X, y, width=8, subsample=subsample, prior_probs=prior_probs)
+    return ECG_CBNN(X, y, width=128, subsample=subsample, prior_probs=prior_probs)
 
 def ECG_Spectral_BNN_128(X, y=None, D_Y=None, sigma=None, subsample=None, prior_probs=None):
     return ECG_Spectral_BNN(X, y, width=128, subsample=subsample, prior_probs=prior_probs)

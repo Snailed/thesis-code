@@ -61,10 +61,14 @@ def ECG_CBNN(X, y=None, width=4, subsample=None, prior_probs=None):
     D_X = X.shape[-1]
     D_Z = width
 
-    # First layer
-    num_circ = jnp.ceil(D_Z / D_X).astype(int)
-    w0_vectors = numpyro.sample("w0", dist.Normal(0.0, 1).expand((num_circ, D_X)))
-    w0 = recursive_circ_vmap(w0_vectors, jnp.arange(D_X)) # (num_circ, D_X, D_X)
+    # # First layer
+    # if D_X % D_Z == 0:
+    #     num_circ = D_X // D_Z
+    # else:
+    #     num_circ = D_X // D_Z + 1
+    # w0_vectors = numpyro.sample("w0", dist.Normal(0.0, 1).expand((num_circ, D_X)))
+    w0_vector = numpyro.sample("w0", dist.Normal(0.0, 1).expand((D_X,)))
+    #w0 = recursive_circ_vmap(w0_vectors, jnp.arange(D_X)) # (num_circ, D_X, D_X)
     b0 = numpyro.sample("b0", dist.Normal(0.0, 1).expand((D_Z, )))
 
     # Middle layers:
@@ -89,7 +93,7 @@ def ECG_CBNN(X, y=None, width=4, subsample=None, prior_probs=None):
         y_batch = y[ind] if y is not None else None
 
         # Forward pass
-        z_p = nn.relu((X_batch @ w0)[...,:D_Z] + b0)
+        z_p = nn.relu(circ_mult(w0_vector, X_batch)[...,:D_Z] + b0)
         z_p = nn.relu(circ_mult(w1_vector, z_p) + b1)
         z_p = nn.relu(circ_mult(w2_vector, z_p) + b2)
         z_p = nn.relu(circ_mult(w3_vector, z_p) + b3)
@@ -105,11 +109,12 @@ def ECG_CBNN(X, y=None, width=4, subsample=None, prior_probs=None):
             assert prior_probs.shape == (5,), f"Shapes prior_probs: {prior_probs.shape}"
             z = nn.softmax(z) * prior_probs
             z /= jnp.sum(z, axis=-1, keepdims=True)
+            y_probs = numpyro.deterministic("y_probs", z)
+            numpyro.sample("y", dist.Categorical(probs=y_probs), obs=y_batch.astype(jnp.int32) if y_batch is not None else None)
         else:
-            z = nn.softmax(z)
+            y_probs = numpyro.deterministic("y_probs", z)
+            numpyro.sample("y", dist.Categorical(logits=y_probs), obs=y_batch.astype(jnp.int32) if y_batch is not None else None)
 
-        y_probs = numpyro.deterministic("y_probs", z)
-        numpyro.sample("y", dist.Categorical(probs=y_probs), obs=y_batch.astype(jnp.int32) if y_batch is not None else None)
 
 def is_hermitian(v):
     v2 = v[1:]
@@ -117,6 +122,16 @@ def is_hermitian(v):
     return jnp.allclose(jnp.imag(res), 0, atol=1e-5) and jnp.allclose(jnp.real(res), 0, atol=1e-5)
 def S(k, alpha=1e2, beta=1e5):
     return beta*jnp.exp(-(1/alpha) * k**2)
+
+@jax.jit
+def spectral_circ_mult(w_hat,x): # w is a vector
+    return jnp.real(fft(w_hat * ifft(x)))
+
+@jax.jit
+def spectral_expand_circ_mult(w_hat,x): # w has (num_circ, D_X), x has (N, D_X)
+    x_fft = ifft(x)
+    x_fft = jnp.repeat(x_fft[:, None, :], w_hat.shape[0], axis=1)
+    return jnp.real(fft(w_hat * x_fft)).reshape(x.shape[0], -1) # (N, num_circ * D_X)
 
 def sample_w_hat(i: int, n: int, S=S, alpha=1e2, beta=1e5):
     w_hat = jnp.zeros(n, dtype=jnp.complex64)
@@ -141,10 +156,10 @@ def ECG_Spectral_BNN(X, y=None, width=4, subsample=None, prior_probs=None):
     D_Z = width
 
     # Hyperprior, sample 4 deep cond. independent a,b
-    #alpha = numpyro.sample("alpha0", dist.Gamma(1.0, 0.1).expand((4,)))
-    #beta = numpyro.sample("beta0", dist.Gamma(10.0, 0.1).expand((4,)))
-    alpha = jnp.array([1e1, 1e1, 1e1, 1e1])
-    beta = jnp.array([1e2, 1e2, 1e2, 1e2])
+    alpha = numpyro.sample("alpha0", dist.Gamma(5.0, 0.5).expand((4,)))
+    beta = numpyro.sample("beta0", dist.Gamma(50.0, 0.5).expand((4,)))
+    #alpha = jnp.array([1e1, 1e1, 1e1, 1e1])
+    #beta = jnp.array([1e2, 1e2, 1e2, 1e2])
 
     # First layer, assumes D_X > D_Z
     w0_hat = sample_w_hat(i=0, n=D_X, alpha=alpha[0], beta=beta[0])
@@ -170,10 +185,10 @@ def ECG_Spectral_BNN(X, y=None, width=4, subsample=None, prior_probs=None):
         y_batch = y[ind] if y is not None else None
 
         # Forward pass
-        z_p = circ_mult(w0_hat, X_batch)[:, :D_Z]
+        z_p = spectral_circ_mult(w0_hat, X_batch)[:, :D_Z]
         z_p = nn.relu(z_p + b0)
-        z_p = nn.relu(circ_mult(w1_hat, z_p) + b1)
-        z_p = nn.relu(circ_mult(w2_hat, z_p) + b2)
+        z_p = nn.relu(spectral_circ_mult(w1_hat, z_p) + b1)
+        z_p = nn.relu(spectral_circ_mult(w2_hat, z_p) + b2)
         # z_p = nn.relu(circ_mult(w3_hat, z_p) + b3)
         z = z_p @ w4 + b4
 
