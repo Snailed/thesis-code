@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from datasets.synthetic import SyntheticDataset
 from datasets.uci import UCIDataset, dataset_names
+from datasets.ecg import ECGDataset
 import matplotlib.pyplot as plt
 import bnns.model_configs
 from sample import save_mcmc, run_hmc, save_metadata
@@ -25,6 +26,8 @@ def _load_datasets(args):
             datasets.append(UCIDataset(dataset))
         elif dataset == "synthetic":
             datasets.append(SyntheticDataset())
+        elif dataset == "ecg":
+            datasets.append(ECGDataset())
     return datasets
 
 def _load_models(args):

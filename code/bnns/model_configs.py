@@ -2,6 +2,7 @@ from bnns.BNN import BNN, UCI_BNN, UCI_BNN_tanh
 from bnns.CBNN import CBNN, UCI_CBNN, UCI_FFT_CBNN, UCI_Full_CBNN, UCI_Full_FFT_CBNN, UCI_Sign_Flipped_CBNN
 from bnns.Spectral_BNN import UCI_Spectral_BNN, UCI_Full_Spectral_BNN
 from bnns.rasmus_bnn import model as Ola_model
+from bnns.ecg.ECG_BNN import ECG_BNN, ECG_CBNN, ECG_Spectral_BNN
 
 
 # Synthetic dataset models
@@ -48,3 +49,12 @@ def UCI_Full_Spectral_BNN_50(X, y=None, D_Y=None, sigma=None, subsample=None):
 
 def Ola_BNN(X,y=None, D_Y=None, sigma=None, subsample=None):
     return Ola_model(X, y, width=50, D_Y=D_Y, subsample=subsample)
+
+def ECG_BNN_128(X, y=None, D_Y=None, sigma=None, subsample=None, prior_probs=None):
+    return ECG_BNN(X, y, width=8, subsample=subsample, prior_probs=prior_probs)
+
+def ECG_CBNN_128(X, y=None, D_Y=None, sigma=None, subsample=None, prior_probs=None):
+    return ECG_CBNN(X, y, width=8, subsample=subsample, prior_probs=prior_probs)
+
+def ECG_Spectral_BNN_128(X, y=None, D_Y=None, sigma=None, subsample=None, prior_probs=None):
+    return ECG_Spectral_BNN(X, y, width=128, subsample=subsample, prior_probs=prior_probs)

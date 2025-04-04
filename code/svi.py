@@ -13,9 +13,10 @@ def run_svi(model, dataset, split, args) -> SVIRunResult:
     svi = SVI(model, guide, optimizer, loss=Trace_ELBO())
     key = jax.random.PRNGKey(args.seed)
     #X = dataset.data[split["tr"]][:,:-1]
-    X = dataset.normalize_X(dataset.data[:,:-1], split)[split["tr"]]
-    y = dataset.data[split["tr"]][:,-1]
-    assert args.subsample_size is not None
+    X = dataset.normalize_X(dataset.X, split)[split["tr"]]
+    #y = dataset.data[split["tr"]][:,-1]
+    y = dataset.y[split["tr"]]
+    #assert args.subsample_size is not None
     svi_result = svi.run(key, args.n_steps, X=X, y=y, subsample=args.subsample_size, progress_bar=args.progress_bar)
     return svi_result, guide
     

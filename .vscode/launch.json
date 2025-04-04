@@ -23,14 +23,13 @@
             "args": [
                 "sample",
                 "--dataset",
-                "boston-housing",
+                "ecg",
                 "--model",
-                "UCI_Full_Spectral_BNN_50",
-                "UCI_Spectral_BNN_50",
+                "ECG_Spectral_BNN_128",
                 "--n_samples",
                 "1000",
                 "--n_warmup",
-                "300",
+                "200",
                 "--seed",
                 "10",
                 "--max_splits",
@@ -70,20 +69,18 @@
             "args": [
                 "map",
                 "--dataset",
-                "boston-housing",
+                "ecg",
                 "--model",
-                "UCI_Full_Spectral_BNN_50",
+                "ECG_Spectral_BNN_128",
                 "--n_steps",
-                "60000",
+                "1000",
                 "--seed",
                 "42",
                 "--learning_rate",
-                "5e-5",
+                "0.001",
                 "--progress-bar",
-                "--subsample-size",
-                "100",
                 "--max_splits",
-                "10"
+                "1"
             ]
         }
     ]
