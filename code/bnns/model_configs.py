@@ -1,22 +1,28 @@
 from bnns.BNN import BNN, UCI_BNN, UCI_BNN_tanh
-from bnns.CBNN import CBNN, UCI_CBNN, UCI_FFT_CBNN, UCI_Full_CBNN, UCI_Full_FFT_CBNN, UCI_Sign_Flipped_CBNN
-from bnns.Spectral_BNN import UCI_Spectral_BNN, UCI_Full_Spectral_BNN
+from bnns.CBNN import CBNN, FFT_CBNN, UCI_CBNN, UCI_FFT_CBNN, UCI_Full_CBNN, UCI_Full_FFT_CBNN, UCI_Sign_Flipped_CBNN
+from bnns.Spectral_BNN import UCI_Spectral_BNN, UCI_Full_Spectral_BNN, Full_Spectral_BNN, Spectral_BNN
 from bnns.rasmus_bnn import model as Ola_model
 from bnns.ecg.ECG_BNN import ECG_BNN, ECG_CBNN, ECG_Spectral_BNN
 
 
 # Synthetic dataset models
-def BNN_2_5(X, y=None, D_Y=None, sigma=None):
-    return BNN(X, y, width=5, D_Y=D_Y, sigma=sigma)
+def BNN_5(X, y=None, D_Y=None, sigma=None, subsample=None):
+    return BNN(X, y, width=5, D_Y=D_Y, sigma=sigma, subsample=subsample)
 
-def BNN_2_100(X, y=None, D_Y=None, sigma=None):
-    return BNN(X, y, width=100, D_Y=D_Y, sigma=sigma)
+def BNN_100(X, y=None, D_Y=None, sigma=None, subsample=None):
+    return BNN(X, y, width=100, D_Y=D_Y, sigma=sigma, subsample=subsample)
 
-def CBNN_2_5(X, y=None, D_Y=None, sigma=None):
-    return CBNN(X, y, width=5, D_Y=D_Y, sigma=sigma)
+def CircBNN_5(X, y=None, D_Y=None, sigma=None, subsample=None):
+    return FFT_CBNN(X, y, width=5, D_Y=D_Y, sigma=sigma, subsample=subsample)
 
-def CBNN_2_100(X, y=None, D_Y=None, sigma=None):
-    return CBNN(X, y, width=100, D_Y=D_Y, sigma=sigma)
+def CircBNN_100(X, y=None, D_Y=None, sigma=None, subsample=None):
+    return FFT_CBNN(X, y, width=100, D_Y=D_Y, sigma=sigma, subsample=subsample)
+
+def SpectralBNN_5(X, y=None, D_Y=None, sigma=None, subsample=None):
+    return Spectral_BNN(X, y, width=5, D_Y=D_Y, sigma=sigma, subsample=subsample)
+
+def SpectralBNN_100(X, y=None, D_Y=None, sigma=None, subsample=None):
+    return Spectral_BNN(X, y, width=100, D_Y=D_Y, sigma=sigma, subsample=subsample)
 
 
 # UCI dataset models

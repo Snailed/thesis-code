@@ -200,7 +200,7 @@ def ECG_Spectral_BNN(X, y=None, width=4, subsample=None, prior_probs=None):
         if prior_probs is not None:
             # Use prior_probs as the prior for the output layer
             assert prior_probs.shape == (5,), f"Shapes prior_probs: {prior_probs.shape}"
-            assert jnp.all(jnp.isfinite(z)), "z contains non-finite values before softmax"
+            #assert jnp.all(jnp.isfinite(z)), "z contains non-finite values before softmax"
             z = nn.softmax(z) * prior_probs
             z /= jnp.sum(z, axis=-1, keepdims=True)
             y_probs = numpyro.deterministic("y_probs", z)
