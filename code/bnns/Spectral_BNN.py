@@ -59,7 +59,9 @@ def Spectral_BNN(X, y=None, width=4, sigma=1.0, D_Y=None, activation=jnp.tanh, s
     b0 = numpyro.sample("b0", dist.Normal(0.0, 1).expand((D_Z, )))
 
     # Middle layers:
-    w1_hat = sample_w_hat(i=1, n=D_Z)
+    alpha0 = numpyro.sample("alpha1", dist.Gamma(1.0, 0.1))
+    beta0 = numpyro.sample("beta1", dist.Gamma(10.0, 0.1))
+    w1_hat = sample_w_hat(i=0, n=D_Z, alpha=alpha0, beta=beta0)
     #w1 = numpyro.sample(f"w1", dist.Normal(0.0, 1).expand((D_Z, D_Z)))
     b1 = numpyro.sample(f"b1", dist.Normal(0.0, 1).expand((D_Z,)))
 

@@ -7,8 +7,24 @@ from numpyro.optim import Adam
 from functools import partial
 import pickle
 
+LEARNING_RATES = {
+    "boston-housing": 5e-5,
+    "concrete": 5e-4,
+    "energy": 5e-4,
+    "kin8nm": 5e-5,
+    "naval-propulsion-plant": 5e-4,
+    "power-plant": 5e-4,
+    "protein-tertiary-structure": 5e-3,
+    "wine-quality-red": 5e-5,
+    "yacht": 5e-5,
+}
+
 def run_svi(model, dataset, split, args) -> SVIRunResult:
-    optimizer = Adam(args.learning_rate)
+    if args.dataset in LEARNING_RATES:
+        lr = LEARNING_RATES[args.dataset]
+    else:
+        lr = args.learning_rate
+    optimizer = Adam(lr)
     guide = AutoDelta(model, init_loc_fn=partial(init_to_uniform, radius=0.1))
     svi = SVI(model, guide, optimizer, loss=Trace_ELBO())
     key = jax.random.PRNGKey(args.seed)
@@ -17,7 +33,8 @@ def run_svi(model, dataset, split, args) -> SVIRunResult:
     #y = dataset.data[split["tr"]][:,-1]
     y = dataset.y[split["tr"]]
     #assert args.subsample_size is not None
-    svi_result = svi.run(key, args.n_steps, X=X, y=y, subsample=args.subsample_size, progress_bar=args.progress_bar)
+    sigma = dataset.noise_level if "noise_level" in dataset.__dict__ else None
+    svi_result = svi.run(key, args.n_steps, X=X, y=y, sigma=sigma, subsample=args.subsample_size, progress_bar=args.progress_bar)
     return svi_result, guide
     
 
