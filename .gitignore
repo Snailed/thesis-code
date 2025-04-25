@@ -175,3 +175,5 @@ cython_debug/
 
 # CUSTOM
 samples
+slurm_logs
+script.sh
