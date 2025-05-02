@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import bnns.model_configs
 from sample import save_mcmc, run_hmc, save_metadata
 from svi import run_svi, save_svi
+from numpyro import set_platform
 
 def _mkdir_sample_dir(args):
     # Make write directory
@@ -44,6 +45,7 @@ def _load_models(args):
     return models, model_names
 
 def sample(args):
+    set_platform(args.device)
     _mkdir_sample_dir(args)
     datasets = _load_datasets(args)
     models, model_names = _load_models(args)
@@ -66,6 +68,7 @@ def sample(args):
                 save_metadata(model.__name__, dataset.dataset_name, extra_fields, split_ind, args)
 
 def map(args):
+    set_platform(args.device)
     _mkdir_sample_dir(args)
     datasets = _load_datasets(args)
     models, model_names = _load_models(args)
@@ -104,9 +107,10 @@ def main():
     parser_sample.add_argument('--dataset', nargs='+', default=["synthetic"], help='Datasets to sample from')
     parser_sample.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
     parser_sample.add_argument("--progress-bar", action="store_true", help="Show progress bar")
-    parser_sample.add_argument("--chain_method", default="parallel", help="MCMC chain method (parallel, sequential, vectorized)")
+    parser_sample.add_argument("--chain_method", default="vectorized", help="MCMC chain method (parallel, sequential, vectorized)")
     parser_sample.add_argument("--max_splits", default=20, type=int, help="Maximum number of dataset splits to consider")
     parser_sample.add_argument("--start_split", default=0, type=int, help="Start from split")
+    parser_sample.add_argument("--device", default="auto", choices=["cpu", "gpu"], help="Device to use. Either cpu or gpu.")
     parser_sample.set_defaults(func=sample)
 
     parser_plot = subparsers.add_parser('plot', help='Plot samples')
@@ -121,6 +125,7 @@ def main():
     parser_map.add_argument("--progress-bar", action="store_true", help="Show progress bar")
     parser_map.add_argument("--subsample-size", type=int, help="Subsample size if supported", default=None)
     parser_map.add_argument("--max_splits", default=20, type=int, help="Maximum number of dataset splits to consider")
+    parser_map.add_argument("--device", default="auto", choices=["cpu", "gpu"], help="Device to use. Either cpu or gpu.")
     parser_map.set_defaults(func=map)
 
     args = parser.parse_args()
