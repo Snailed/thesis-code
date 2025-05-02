@@ -58,8 +58,16 @@ def sample(args):
                 if split_ind >= args.max_splits:
                     print("Reached max splits, stopping")
                     break
+                if args.init_map_iters is not None:
+                    print(f"Computing MAP estimate for initial point for {args.init_map_iters} iterations")
+                    args.subsample_size = 100 
+                    svi_result, guide = run_svi(model, dataset, split, args.init_map_iters, args)
+                    initial_point = svi_result.params
+                else:
+                    initial_point = None
+
                 print(f"Sampling {model.__name__} on {dataset.dataset_name} split {split_ind}")
-                mcmc, time_spanned = run_hmc(model, dataset, split, args)
+                mcmc, time_spanned = run_hmc(model, dataset, split, args, initial_point=initial_point)
                 save_mcmc(mcmc, model.__name__, dataset.dataset_name, split_ind, args)
                 extra_fields = mcmc.get_extra_fields()
                 extra_fields["time_spanned"] = time_spanned
@@ -78,7 +86,7 @@ def map(args):
                     print("Reached max splits, stopping")
                     break
                 print("MAP-estimating", model.__name__, "on", dataset.dataset_name, "split", split_ind)
-                svi_result, guide = run_svi(model, dataset, split, args)
+                svi_result, guide = run_svi(model, dataset, split, args.n_steps, args)
                 svi_result = {
                     "params": svi_result.params,
                     "losses": svi_result.losses,
@@ -107,6 +115,7 @@ def main():
     parser_sample.add_argument("--chain_method", default="parallel", help="MCMC chain method (parallel, sequential, vectorized)")
     parser_sample.add_argument("--max_splits", default=20, type=int, help="Maximum number of dataset splits to consider")
     parser_sample.add_argument("--start_split", default=0, type=int, help="Start from split")
+    parser_sample.add_argument("--init_map_iters", default=None, type=int, help="If provided, use MAP estimate as initial point")
     parser_sample.set_defaults(func=sample)
 
     parser_plot = subparsers.add_parser('plot', help='Plot samples')

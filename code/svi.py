@@ -17,11 +17,12 @@ LEARNING_RATES = {
     "protein-tertiary-structure": 5e-3,
     "wine-quality-red": 5e-5,
     "yacht": 5e-5,
+    "ecg": 5e-4,
 }
 
-def run_svi(model, dataset, split, args) -> SVIRunResult:
-    if args.dataset in LEARNING_RATES:
-        lr = LEARNING_RATES[args.dataset]
+def run_svi(model, dataset, split, steps, args) -> SVIRunResult:
+    if dataset.dataset_name in LEARNING_RATES:
+        lr = LEARNING_RATES[dataset.dataset_name]
     else:
         lr = args.learning_rate
     optimizer = Adam(lr)
@@ -34,7 +35,7 @@ def run_svi(model, dataset, split, args) -> SVIRunResult:
     y = dataset.y[split["tr"]]
     #assert args.subsample_size is not None
     sigma = dataset.noise_level if "noise_level" in dataset.__dict__ else None
-    svi_result = svi.run(key, args.n_steps, X=X, y=y, sigma=sigma, subsample=args.subsample_size, progress_bar=args.progress_bar)
+    svi_result = svi.run(key, steps, X=X, y=y, sigma=sigma, subsample=args.subsample_size, progress_bar=args.progress_bar)
     return svi_result, guide
     
 

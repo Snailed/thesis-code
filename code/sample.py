@@ -9,8 +9,13 @@ from time import time
 import dill
 from utils import normalize
 
-def run_hmc(model, dataset, split, args, post_warmup_state=None):
-    kernel = NUTS(model, init_strategy=numpyro.infer.util.init_to_uniform(radius=0.1))
+def run_hmc(model, dataset, split, args, post_warmup_state=None, initial_point=None):
+    if initial_point is None:
+        init_strategy = numpyro.infer.util.init_to_uniform(radius=0.1)
+    else:
+        init_strategy = numpyro.infer.util.init_to_value(values=initial_point)
+
+    kernel = NUTS(model, init_strategy=init_strategy)
     mcmc = MCMC(
         kernel, 
         num_warmup=args.n_warmup, 
