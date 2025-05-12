@@ -60,7 +60,8 @@ def sample(args):
                     break
                 if args.init_map_iters is not None:
                     print(f"Computing MAP estimate for initial point for {args.init_map_iters} iterations")
-                    args.subsample_size = 100 
+                    #args.subsample_size = 100 
+                    args.subsample_size = None
                     svi_result, guide = run_svi(model, dataset, split, args.init_map_iters, args)
                     initial_point = svi_result.params
                 else:

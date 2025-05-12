@@ -17,7 +17,7 @@ LEARNING_RATES = {
     "protein-tertiary-structure": 5e-3,
     "wine-quality-red": 5e-5,
     "yacht": 5e-5,
-    "ecg": 5e-4,
+    "ecg": 5e-3,
 }
 
 def run_svi(model, dataset, split, steps, args) -> SVIRunResult:
