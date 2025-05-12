@@ -25,16 +25,18 @@
                 "--dataset",
                 "ecg",
                 "--model",
-                "ECG_Spectral_BNN_128",
+                "ECG_BNN_128",
                 "--n_samples",
-                "1000",
+                "10",
                 "--n_warmup",
-                "200",
+                "10",
                 "--seed",
                 "10",
                 "--max_splits",
                 "1",
-                "--progress-bar"
+                "--progress-bar",
+                "--init_map_iters",
+                "1000"
             ]
         },
         {
@@ -46,9 +48,11 @@
             "args": [
                 "sample",
                 "--dataset",
-                "boston-housing",
+                "power-plant",
                 "--model",
-                "UCI_Spectral_BNN_50",
+                "UCI_BNN_50",
+                "UCI_Full_FFT_CBNN_50",
+                "UCI_Full_Spectral_BNN_50",
                 "--n_samples",
                 "3000",
                 "--n_warmup",
@@ -57,7 +61,9 @@
                 "10",
                 "--max_splits",
                 "5",
-                "--progress-bar"
+                "--progress-bar",
+                "--init_map_iters",
+                "60000"
             ]
         },
         {
@@ -71,17 +77,91 @@
                 "--dataset",
                 "ecg",
                 "--model",
-                "ECG_Spectral_BNN_128",
+                "ECG_CBNN_128",
                 "--n_steps",
                 "1000",
                 "--seed",
-                "42",
+                "10",
                 "--learning_rate",
-                "0.001",
+                "0.01",
                 "--progress-bar",
                 "--max_splits",
                 "1"
             ]
-        }
+        },
+        {
+            "name": "Synthetic-MAP",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "code/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "map",
+                "--dataset",
+                "synthetic",
+                "--model",
+                "SpectralBNN_5",
+                "SpectralBNN_100",
+                "--n_steps",
+                "15000",
+                "--seed",
+                "42",
+                "--learning_rate",
+                "1e-3",
+                "--progress-bar",
+                "--max_splits",
+                "1"
+            ]
+        },
+        {
+            "name": "Synthetic-NUTS",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "code/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "sample",
+                "--dataset",
+                "synthetic",
+                "--model",
+                "BNN_5",
+                "CircBNN_5",
+                "SpectralBNN_5",
+                "--n_warmup",
+                "500",
+                "--n_samples",
+                "3000",
+                "--seed",
+                "42",
+                "--progress-bar",
+                "--max_splits",
+                "1"
+            ]
+        },
+        {
+            "name": "ECG-NUTS-test",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "code/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "sample",
+                "--dataset",
+                "ecg",
+                "--model",
+                "ECG_CBNN_128",
+                "--n_samples",
+                "100",
+                "--n_warmup",
+                "50",
+                "--seed",
+                "10",
+                "--init_map_iters",
+                "1000",
+                "--progress-bar",
+                "--max_splits",
+                "1"
+            ]
+        },
     ]
 }

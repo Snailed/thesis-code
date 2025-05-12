@@ -73,15 +73,15 @@ def ECG_CBNN(X, y=None, width=4, subsample=None, prior_probs=None):
 
     # Middle layers:
     w1_vector = numpyro.sample(f"w1", dist.Normal(0, 1).expand((D_Z,)))
-    w1 = circ_vmap(w1_vector, jnp.arange(D_Z))
+    #w1 = circ_vmap(w1_vector, jnp.arange(D_Z))
     b1 = numpyro.sample(f"b1", dist.Normal(0.0, 1).expand((D_Z,)))
 
     w2_vector = numpyro.sample(f"w2", dist.Normal(0, 1).expand((D_Z,)))
-    w2 = circ_vmap(w2_vector, jnp.arange(D_Z))
+    #w2 = circ_vmap(w2_vector, jnp.arange(D_Z))
     b2 = numpyro.sample(f"b2", dist.Normal(0.0, 1).expand((D_Z,)))
 
     w3_vector = numpyro.sample(f"w3", dist.Normal(0, 1).expand((D_Z,)))
-    w3 = circ_vmap(w3_vector, jnp.arange(D_Z))
+    #w3 = circ_vmap(w3_vector, jnp.arange(D_Z))
     b3 = numpyro.sample(f"b3", dist.Normal(0.0, 1).expand((D_Z,)))
 
     # Last layer
