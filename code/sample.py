@@ -9,13 +9,17 @@ from time import time
 import dill
 from utils import normalize
 
-def run_hmc(model, dataset, split, args, post_warmup_state=None, initial_point=None):
+def run_hmc(model, dataset, split, args, initial_point=None):
     if initial_point is None:
         init_strategy = numpyro.infer.util.init_to_uniform(radius=0.1)
     else:
+        print("Initial point keys...", initial_point.keys())
         init_strategy = numpyro.infer.util.init_to_value(values=initial_point)
 
-    kernel = NUTS(model, init_strategy=init_strategy)
+    kernel = NUTS(
+            model, 
+            init_strategy=init_strategy
+        )
     mcmc = MCMC(
         kernel, 
         num_warmup=args.n_warmup, 
@@ -25,8 +29,7 @@ def run_hmc(model, dataset, split, args, post_warmup_state=None, initial_point=N
         progress_bar=args.progress_bar,
         chain_method=args.chain_method
     )
-    if post_warmup_state is not None:
-        mcmc.post_warmup_state = post_warmup_state
+
     rng_key = jax.random.PRNGKey(args.seed)
     X_train = dataset.X[split["tr"]]
     X_train, X_mean, X_std = normalize(X_train, None, None)

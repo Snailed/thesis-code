@@ -17,11 +17,20 @@ LEARNING_RATES = {
     "protein-tertiary-structure": 5e-3,
     "wine-quality-red": 5e-5,
     "yacht": 5e-5,
-    "ecg": 5e-3,
+    "ecg": 3e-2,
+}
+LEARNING_RATES_PER_MODEL = {
+    "ECG_BNN_128": 5e-4,
+    "ECG_CBNN_128": 3e-3,
+    "ECG_Spectral_BNN_128": 3e-2,
+    "ECG_Small_CBNN_128": 3e-3,
 }
 
 def run_svi(model, dataset, split, steps, args) -> SVIRunResult:
-    if dataset.dataset_name in LEARNING_RATES:
+    if dataset.dataset_name == "ecg":
+        lr = LEARNING_RATES_PER_MODEL[model.__name__]
+        print("Using learning rate", lr)
+    elif dataset.dataset_name in LEARNING_RATES:
         lr = LEARNING_RATES[dataset.dataset_name]
     else:
         lr = args.learning_rate

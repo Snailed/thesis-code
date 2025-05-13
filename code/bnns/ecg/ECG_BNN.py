@@ -208,3 +208,56 @@ def ECG_Spectral_BNN(X, y=None, width=4, subsample=None, prior_probs=None):
         else:
             y_probs = numpyro.deterministic("y_probs", z)
             numpyro.sample("y", dist.Categorical(logits=y_probs), obs=y_batch.astype(jnp.int32) if y_batch is not None else None)
+
+
+
+
+
+def ECG_Small_CBNN(X, y=None, width=4, subsample=None, prior_probs=None):
+    N = X.shape[-2]
+    D_X = X.shape[-1]
+    D_Z = width
+
+    # # First layer
+    # if D_X % D_Z == 0:
+    #     num_circ = D_X // D_Z
+    # else:
+    #     num_circ = D_X // D_Z + 1
+    # w0_vectors = numpyro.sample("w0", dist.Normal(0.0, 1).expand((num_circ, D_X)))
+    w0_vector = numpyro.sample("w0", dist.Normal(0.0, 1).expand((D_X,)))
+    #w0 = recursive_circ_vmap(w0_vectors, jnp.arange(D_X)) # (num_circ, D_X, D_X)
+    b0 = numpyro.sample("b0", dist.Normal(0.0, 1).expand((D_Z, )))
+
+    # Middle layers:
+    w1_vector = numpyro.sample(f"w1", dist.Normal(0, 1).expand((D_Z,)))
+    #w1 = circ_vmap(w1_vector, jnp.arange(D_Z))
+    b1 = numpyro.sample(f"b1", dist.Normal(0.0, 1).expand((D_Z,)))
+
+    # Last layer
+    w2 = numpyro.sample(f"w4", dist.Normal(0.0, 1).expand((D_Z, 5)))
+    b2 = numpyro.sample(f"b4", dist.Normal(0.0, 1).expand((5,)))
+
+    with numpyro.plate("data", N, subsample_size=subsample if subsample is not None else N) as ind:
+        X_batch = X[ind]
+        y_batch = y[ind] if y is not None else None
+
+        # Forward pass
+        z_p = nn.relu(circ_mult(w0_vector, X_batch)[...,:D_Z] + b0)
+        z_p = nn.relu(circ_mult(w1_vector, z_p) + b1)
+
+        z = (z_p @ w2 + b2)
+        if z.ndim == 3:
+            z = z[0]
+        if y_batch is not None:
+            assert z.shape == (subsample if subsample else N, 5), f"Shapes z: {z.shape}"
+
+        if prior_probs is not None:
+            # Use prior_probs as the prior for the output layer
+            assert prior_probs.shape == (5,), f"Shapes prior_probs: {prior_probs.shape}"
+            z = nn.softmax(z) * prior_probs
+            z /= jnp.sum(z, axis=-1, keepdims=True)
+            y_probs = numpyro.deterministic("y_probs", z)
+            numpyro.sample("y", dist.Categorical(probs=y_probs), obs=y_batch.astype(jnp.int32) if y_batch is not None else None)
+        else:
+            y_probs = numpyro.deterministic("y_probs", z)
+            numpyro.sample("y", dist.Categorical(logits=y_probs), obs=y_batch.astype(jnp.int32) if y_batch is not None else None)

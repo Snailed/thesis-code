@@ -66,6 +66,7 @@ def sample(args):
                     args.subsample_size = None
                     svi_result, guide = run_svi(model, dataset, split, args.init_map_iters, args)
                     initial_point = svi_result.params
+                    initial_point = {k.removesuffix('_auto_loc'): v for k, v in initial_point.items()}
                 else:
                     initial_point = None
 
