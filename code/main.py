@@ -28,7 +28,7 @@ def _load_datasets(args):
         elif dataset == "synthetic":
             datasets.append(SyntheticDataset())
         elif dataset == "ecg":
-            datasets.append(ECGDataset())
+            datasets.append(ECGDataset(resample_train=args.resample_ecg))
     return datasets
 
 def _load_models(args):
@@ -122,6 +122,8 @@ def main():
     parser_sample.add_argument("--start_split", default=0, type=int, help="Start from split")
     parser_sample.add_argument("--device", default="auto", choices=["cpu", "gpu"], help="Device to use. Either cpu or gpu.")
     parser_sample.add_argument("--init_map_iters", default=None, type=int, help="If provided, use MAP estimate as initial point")
+    parser_sample.add_argument("--resample-ecg", action="store_true", help="Should ECG data be resampled?")
+
     parser_sample.set_defaults(func=sample)
 
     parser_plot = subparsers.add_parser('plot', help='Plot samples')
@@ -137,6 +139,7 @@ def main():
     parser_map.add_argument("--subsample-size", type=int, help="Subsample size if supported", default=None)
     parser_map.add_argument("--max_splits", default=20, type=int, help="Maximum number of dataset splits to consider")
     parser_map.add_argument("--device", default="auto", choices=["cpu", "gpu"], help="Device to use. Either cpu or gpu.")
+    parser_map.add_argument("--resample-ecg", action="store_true", help="Should ECG data be resampled?")
     parser_map.set_defaults(func=map)
 
     args = parser.parse_args()

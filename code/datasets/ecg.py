@@ -8,7 +8,7 @@ import os
 
 class ECGDataset():
     dataset_name = "ecg"
-    def __init__(self, n=2000, random_state=42):
+    def __init__(self, n=2000, random_state=42, resample_train=False):
         path = kagglehub.dataset_download("shayanfazeli/heartbeat")
         train_df = pd.read_csv(os.path.join(path, "mitbih_train.csv"), header=None)
         test_df = pd.read_csv(os.path.join(path, "mitbih_test.csv"), header=None)
@@ -17,18 +17,21 @@ class ECGDataset():
         self.train_class_probs = train_df[187].value_counts(normalize=True)
 
         # Resample to get balanced classes
-        df_1=train_df[train_df[187]==1]
-        df_2=train_df[train_df[187]==2]
-        df_3=train_df[train_df[187]==3]
-        df_4=train_df[train_df[187]==4]
-        df_0=(train_df[train_df[187]==0]).sample(n=n,random_state=random_state)
+        if resample_train:
+            df_1=train_df[train_df[187]==1]
+            df_2=train_df[train_df[187]==2]
+            df_3=train_df[train_df[187]==3]
+            df_4=train_df[train_df[187]==4]
+            df_0=(train_df[train_df[187]==0]).sample(n=n,random_state=random_state)
 
-        df_1_upsample=resample(df_1,replace=True,n_samples=n,random_state=random_state + 1)
-        df_2_upsample=resample(df_2,replace=True,n_samples=n,random_state=random_state + 2)
-        df_3_upsample=resample(df_3,replace=True,n_samples=n,random_state=random_state + 3)
-        df_4_upsample=resample(df_4,replace=True,n_samples=n,random_state=random_state + 4)
+            df_1_upsample=resample(df_1,replace=True,n_samples=n,random_state=random_state + 1)
+            df_2_upsample=resample(df_2,replace=True,n_samples=n,random_state=random_state + 2)
+            df_3_upsample=resample(df_3,replace=True,n_samples=n,random_state=random_state + 3)
+            df_4_upsample=resample(df_4,replace=True,n_samples=n,random_state=random_state + 4)
 
-        train=pd.concat([df_0,df_1_upsample,df_2_upsample,df_3_upsample,df_4_upsample])
+            train=pd.concat([df_0,df_1_upsample,df_2_upsample,df_3_upsample,df_4_upsample])
+        else:
+            train = train_df
         train=jnp.array(train.sample(frac=1,random_state=random_state).values)
         test = jnp.array(test_df.values)
 
