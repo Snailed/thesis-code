@@ -18,8 +18,11 @@ def ECG_BNN(X, y=None, width=4, subsample=None, prior_probs=None):
     w1 = numpyro.sample(f"w1", dist.Normal(0.0, 1).expand((D_Z, D_Z)))
     b1 = numpyro.sample(f"b1", dist.Normal(0.0, 1).expand((D_Z,)))
 
-    w2 = numpyro.sample(f"w2", dist.Normal(0.0, 1).expand((D_Z, 5)))
-    b2 = numpyro.sample(f"b2", dist.Normal(0.0, 1).expand((5,)))
+    w2 = numpyro.sample(f"w2", dist.Normal(0.0, 1).expand((D_Z, D_Z)))
+    b2 = numpyro.sample(f"b2", dist.Normal(0.0, 1).expand((D_Z,)))
+
+    w3 = numpyro.sample(f"w3", dist.Normal(0.0, 1).expand((D_Z, 5)))
+    b3 = numpyro.sample(f"b3", dist.Normal(0.0, 1).expand((5,)))
 
     with numpyro.plate("data", N, subsample_size=subsample if subsample is not None else N) as ind:
         X_batch = X[ind]
@@ -28,8 +31,9 @@ def ECG_BNN(X, y=None, width=4, subsample=None, prior_probs=None):
         # Forward pass
         z_p = nn.tanh(X_batch @ w0 + b0)
         z_p = nn.tanh(z_p @ w1 + b1)
+        z_p = nn.tanh(z_p @ w2 + b2)
 
-        z = (z_p @ w2 + b2)
+        z = (z_p @ w3 + b3)
         if y_batch is not None:
             assert z.shape == (subsample if subsample else N, 5), f"Shapes z: {z.shape}"
 
@@ -80,13 +84,9 @@ def ECG_CBNN(X, y=None, width=4, subsample=None, prior_probs=None):
     #w2 = circ_vmap(w2_vector, jnp.arange(D_Z))
     b2 = numpyro.sample(f"b2", dist.Normal(0.0, 1).expand((D_Z,)))
 
-    w3_vector = numpyro.sample(f"w3", dist.Normal(0, 1).expand((D_Z,)))
-    #w3 = circ_vmap(w3_vector, jnp.arange(D_Z))
-    b3 = numpyro.sample(f"b3", dist.Normal(0.0, 1).expand((D_Z,)))
-
     # Last layer
-    w4 = numpyro.sample(f"w4", dist.Normal(0.0, 1).expand((D_Z, 5)))
-    b4 = numpyro.sample(f"b4", dist.Normal(0.0, 1).expand((5,)))
+    w3 = numpyro.sample(f"w3", dist.Normal(0.0, 1).expand((D_Z, 5)))
+    b3 = numpyro.sample(f"b3", dist.Normal(0.0, 1).expand((5,)))
 
     with numpyro.plate("data", N, subsample_size=subsample if subsample is not None else N) as ind:
         X_batch = X[ind]
@@ -96,9 +96,8 @@ def ECG_CBNN(X, y=None, width=4, subsample=None, prior_probs=None):
         z_p = nn.relu(circ_mult(w0_vector, X_batch)[...,:D_Z] + b0)
         z_p = nn.relu(circ_mult(w1_vector, z_p) + b1)
         z_p = nn.relu(circ_mult(w2_vector, z_p) + b2)
-        z_p = nn.relu(circ_mult(w3_vector, z_p) + b3)
 
-        z = (z_p @ w4 + b4)
+        z = (z_p @ w3 + b3)
         if z.ndim == 3:
             z = z[0]
         if y_batch is not None:
@@ -156,8 +155,8 @@ def ECG_Spectral_BNN(X, y=None, width=4, subsample=None, prior_probs=None):
     D_Z = width
 
     # Hyperprior, sample 4 deep cond. independent a,b
-    alpha = numpyro.sample("alpha0", dist.Gamma(5.0, 0.5).expand((4,)))
-    beta = numpyro.sample("beta0", dist.Gamma(50.0, 0.5).expand((4,)))
+    alpha = numpyro.sample("alpha0", dist.Gamma(5.0, 0.5).expand((3,)))
+    beta = numpyro.sample("beta0", dist.Gamma(50.0, 0.5).expand((3,)))
     #alpha = jnp.array([1e1, 1e1, 1e1, 1e1])
     #beta = jnp.array([1e2, 1e2, 1e2, 1e2])
 
@@ -172,12 +171,9 @@ def ECG_Spectral_BNN(X, y=None, width=4, subsample=None, prior_probs=None):
     w2_hat = sample_w_hat(i=2, n=D_Z, alpha=alpha[2], beta=beta[2])
     b2 = numpyro.sample(f"b2", dist.Normal(0.0, 1).expand((D_Z,)))
 
-    # w3_hat = sample_w_hat(i=3, n=D_Z, alpha=alpha[3], beta=beta[3])
-    # b3 = numpyro.sample(f"b3", dist.Normal(0.0, 1).expand((D_Z,)))
-
     # Last layer
-    w4 = numpyro.sample("w4", dist.Normal(0.0, 1).expand((D_Z, 5)))
-    b4 = numpyro.sample(f"b4", dist.Normal(0.0, 1).expand((5,)))
+    w4 = numpyro.sample("w3", dist.Normal(0.0, 1).expand((D_Z, 5)))
+    b4 = numpyro.sample(f"b3", dist.Normal(0.0, 1).expand((5,)))
 
 
     with numpyro.plate("data", N, subsample_size=subsample if subsample is not None else N) as ind:
