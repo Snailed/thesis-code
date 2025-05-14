@@ -7,9 +7,9 @@ import jax.nn as nn
 
 @jax.jit
 def circ_mult(w,x): # w is a vector
-    return jnp.real(fft(fft(w) * ifft(x)))
+    return jnp.real(ifft(fft(w, axis=-1) * fft(x, axis=-1), axis=-1))
 
-@jax.jit
+#@jax.jit
 def expand_circ_mult(w,x): # w has (num_circ, D_X), x has (N, D_X)
     x_fft = ifft(x)
     x_fft = jnp.repeat(x_fft[:, None, :], w.shape[0], axis=1)

@@ -47,9 +47,12 @@ def ECG_BNN(X, y=None, width=4, subsample=None, prior_probs=None):
         y_probs = numpyro.deterministic("y_probs", z)
         numpyro.sample("y", dist.Categorical(probs=y_probs), obs=y_batch.astype(jnp.int32) if y_batch is not None else None)
 
+# @jax.jit
+# def circ_mult(w,x): # w is a vector
+#     return jnp.real(fft(fft(w) * ifft(x)))
 @jax.jit
 def circ_mult(w,x): # w is a vector
-    return jnp.real(fft(fft(w) * ifft(x)))
+    return jnp.real(ifft(fft(w, axis=-1) * fft(x, axis=-1), axis=-1))
 
 @jax.jit
 def expand_circ_mult(w,x): # w has (num_circ, D_X), x has (N, D_X)
