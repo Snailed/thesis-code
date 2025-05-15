@@ -54,11 +54,18 @@ def ECG_BNN(X, y=None, width=4, subsample=None, prior_probs=None):
 def circ_mult(w,x): # w is a vector
     return jnp.real(ifft(fft(w, axis=-1) * fft(x, axis=-1), axis=-1))
 
+# @jax.jit
+# def expand_circ_mult(w,x): # w has (num_circ, D_X), x has (N, D_X)
+#     x_fft = ifft(x)
+#     x_fft = jnp.repeat(x_fft[:, None, :], w.shape[0], axis=1)
+#     return jnp.real(fft(fft(w) * x_fft)).reshape(x.shape[0], -1) # (N, num_circ * D_X)
+
+# Performs W @ x.T
 @jax.jit
 def expand_circ_mult(w,x): # w has (num_circ, D_X), x has (N, D_X)
-    x_fft = ifft(x)
-    x_fft = jnp.repeat(x_fft[:, None, :], w.shape[0], axis=1)
-    return jnp.real(fft(fft(w) * x_fft)).reshape(x.shape[0], -1) # (N, num_circ * D_X)
+    x_fft = fft(x, axis=-1)[..., None, None, :]
+    w_fft = fft(w, axis=-1)
+    return jnp.real(ifft(x_fft * w_fft, axis=-1)).transpose(1, 2,3,0)
 
 circ_vmap = jax.vmap(lambda col, ind: jnp.roll(col, ind), in_axes=(None,0), out_axes=1)
 recursive_circ_vmap = jax.vmap(circ_vmap, in_axes=(0, None), out_axes=0)
@@ -127,13 +134,13 @@ def S(k, alpha=1e2, beta=1e5):
 
 @jax.jit
 def spectral_circ_mult(w_hat,x): # w is a vector
-    return jnp.real(fft(w_hat * ifft(x)))
+    return jnp.real(ifft(w_hat * fft(x)))
 
-@jax.jit
-def spectral_expand_circ_mult(w_hat,x): # w has (num_circ, D_X), x has (N, D_X)
-    x_fft = ifft(x)
-    x_fft = jnp.repeat(x_fft[:, None, :], w_hat.shape[0], axis=1)
-    return jnp.real(fft(w_hat * x_fft)).reshape(x.shape[0], -1) # (N, num_circ * D_X)
+# @jax.jit
+# def spectral_expand_circ_mult(w_hat,x): # w has (num_circ, D_X), x has (N, D_X)
+#     x_fft = ifft(x)
+#     x_fft = jnp.repeat(x_fft[:, None, :], w_hat.shape[0], axis=1)
+#     return jnp.real(fft(w_hat * x_fft)).reshape(x.shape[0], -1) # (N, num_circ * D_X)
 
 def sample_w_hat(i: int, n: int, S=S, alpha=1e2, beta=1e5):
     w_hat = jnp.zeros(n, dtype=jnp.complex64)

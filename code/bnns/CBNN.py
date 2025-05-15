@@ -9,11 +9,18 @@ import jax.nn as nn
 def circ_mult(w,x): # w is a vector
     return jnp.real(ifft(fft(w, axis=-1) * fft(x, axis=-1), axis=-1))
 
-#@jax.jit
+@jax.jit
 def expand_circ_mult(w,x): # w has (num_circ, D_X), x has (N, D_X)
-    x_fft = ifft(x)
-    x_fft = jnp.repeat(x_fft[:, None, :], w.shape[0], axis=1)
-    return jnp.real(fft(fft(w) * x_fft)).reshape(x.shape[0], -1) # (N, num_circ * D_X)
+    x_fft = fft(x, axis=-1)[..., None, None, :]
+    if w.ndim == 4:
+        # w has (num_chain, num_sample, num_circ, D_X)
+        x_fft = x_fft[..., None, None, :]
+    elif w.ndim == 3:
+        x_fft = x_fft[..., None, :]
+    w_fft = fft(w, axis=-1)
+    num_circ = w.shape[-2]
+    D_X = w.shape[-1]
+    return jnp.real(ifft(x_fft * w_fft, axis=-1)).transpose(0, 3, 1,2).reshape(w.shape[:-2] + (x.shape[0], num_circ * D_X))
 
 circ_vmap = jax.vmap(lambda col, ind: jnp.roll(col, ind), in_axes=(None,0), out_axes=1)
 recursive_circ_vmap = jax.vmap(circ_vmap, in_axes=(0, None), out_axes=0)

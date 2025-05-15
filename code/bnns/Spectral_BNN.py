@@ -7,13 +7,20 @@ import jax.nn as nn
 
 @jax.jit
 def circ_mult(w_hat,x): # w is a vector
-    return jnp.real(fft(w_hat * ifft(x)))
+    return jnp.real(ifft(w_hat * fft(x, axis=-1), axis=-1))
 
 @jax.jit
 def expand_circ_mult(w,x): # w has (num_circ, D_X), x has (N, D_X)
-    x_fft = ifft(x)
-    x_fft = jnp.repeat(x_fft[:, None, :], w.shape[0], axis=1)
-    return jnp.real(fft(fft(w) * x_fft)).reshape(x.shape[0], -1) # (N, num_circ * D_X)
+    x_fft = fft(x, axis=-1)[..., None, None, :]
+    if w.ndim == 4:
+        # w has (num_chain, num_sample, num_circ, D_X)
+        x_fft = x_fft[..., None, None, :]
+    elif w.ndim == 3:
+        x_fft = x_fft[..., None, :]
+    w_fft = fft(w, axis=-1)
+    num_circ = w.shape[-2]
+    D_X = w.shape[-1]
+    return jnp.real(ifft(x_fft * w_fft, axis=-1)).transpose(0, 3, 1,2).reshape(w.shape[:-2] + (x.shape[0], num_circ * D_X))
 
 def is_hermitian(v):
     v2 = v[1:]
