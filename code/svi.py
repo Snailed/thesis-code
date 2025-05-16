@@ -23,6 +23,7 @@ LEARNING_RATES_PER_MODEL = {
     "ECG_BNN_128": 5e-4,
     "ECG_CBNN_128": 3e-3,
     "ECG_Spectral_BNN_128": 3e-2,
+    "ECG_Spectral_BNN_32": 3e-2,
     "ECG_Small_CBNN_128": 3e-3,
 }
 

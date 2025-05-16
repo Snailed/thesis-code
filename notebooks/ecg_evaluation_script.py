@@ -11,7 +11,7 @@ import os
 import sys
 import arviz as az
 from numpyro import set_platform
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 # Add ../code to PYTHON_PATH
 sys.path.insert(0, "../code")
 sys.path.insert(0, "..")
@@ -84,7 +84,7 @@ def evaluate(model, post_draws, X, y, batch_ndims, adjust=True):
     return y_pred, predictions
 
 def batch_nll(model, post_draws, X, y, batch_ndims, adjust=True):
-    batch_size = min(5120, X.shape[0])
+    batch_size = min(1028, X.shape[0])
     n_batches = X.shape[0] // batch_size + 1 if X.shape[0] > 5120 else 1
     nlls = []
     if adjust:
@@ -104,7 +104,7 @@ def batch_nll(model, post_draws, X, y, batch_ndims, adjust=True):
     nlls = jax.scipy.special.logsumexp(nlls, axis=-2)
     return -jnp.mean(nlls.astype(jnp.float64)).astype(jnp.float64)
 
-def evaluate(samples):
+def evaluate_all(samples):
     results = []
     preds = []
     for sample_dict in tqdm(samples):
@@ -125,10 +125,11 @@ def evaluate(samples):
         if MAX_DATA is not None:
             X_train, y_train = resample(X_train, y_train, n_samples=MAX_DATA, random_state=SEED)
             X_test, y_test = resample(X_test, y_test, n_samples=MAX_DATA, random_state=SEED)
-
+        print("Computing negative log-likelihood")
         train_nll = batch_nll(model, post_draws, X_train, y_train, batch_ndims, adjust=False)
         test_nll = batch_nll(model, post_draws, X_test, y_test, batch_ndims, adjust=True)
 
+        print("Computing accuracy")
         y_pred_train, y_pred_train_probs = evaluate(model, post_draws, X_train, y_train, batch_ndims, adjust=False)
         train_accuracy = (y_train == y_pred_train).mean()
 
@@ -177,7 +178,7 @@ if __name__=="__main__":
     dataset = ECGDataset(resample_train=False)
 
     samples = load_samples()
-    results, preds = evaluate(samples)
+    results, preds = evaluate_all(samples)
     results.to_csv("ecg_results.csv", index=False)
     print(results)
     # Save the predictions
