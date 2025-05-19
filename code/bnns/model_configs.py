@@ -73,4 +73,6 @@ def ECG_Spectral_BNN_32(X, y=None, D_Y=None, sigma=None, subsample=None, prior_p
     return ECG_Spectral_BNN(X, y, width=32, subsample=subsample, prior_probs=prior_probs)
 def ECG_Small_CBNN_128(X, y=None, D_Y=None, sigma=None, subsample=None, prior_probs=None):
     return ECG_Small_CBNN(X, y, width=128, subsample=subsample, prior_probs=prior_probs)
+def ECG_Small_CBNN_32(X, y=None, D_Y=None, sigma=None, subsample=None, prior_probs=None):
+    return ECG_Small_CBNN(X, y, width=32, subsample=subsample, prior_probs=prior_probs)
 
