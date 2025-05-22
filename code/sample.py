@@ -18,7 +18,8 @@ def run_hmc(model, dataset, split, args, initial_point=None):
 
     kernel = NUTS(
             model, 
-            init_strategy=init_strategy
+            init_strategy=init_strategy,
+            max_tree_depth=args.tree_depth,
         )
     mcmc = MCMC(
         kernel, 

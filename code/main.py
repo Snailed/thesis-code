@@ -124,6 +124,7 @@ def main():
     parser_sample.add_argument("--device", default="cpu", choices=["cpu", "gpu"], help="Device to use. Either cpu or gpu.")
     parser_sample.add_argument("--init_map_iters", default=None, type=int, help="If provided, use MAP estimate as initial point")
     parser_sample.add_argument("--resample-ecg", action="store_true", help="Should ECG data be resampled?")
+    parser_sample.add_argument("--tree-depth", default=10, type=int, help="Max tree depth of doubling scheme for NUTS")
 
     parser_sample.set_defaults(func=sample)
 
