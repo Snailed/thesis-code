@@ -2,7 +2,7 @@ from bnns.BNN import BNN, UCI_BNN, UCI_BNN_tanh
 from bnns.CBNN import CBNN, FFT_CBNN, UCI_CBNN, UCI_FFT_CBNN, UCI_Full_CBNN, UCI_Full_FFT_CBNN, UCI_Sign_Flipped_CBNN
 from bnns.Spectral_BNN import UCI_Spectral_BNN, UCI_Full_Spectral_BNN, Full_Spectral_BNN, Spectral_BNN
 from bnns.rasmus_bnn import model as Ola_model
-from bnns.ecg.ECG_BNN import ECG_BNN, ECG_CBNN, ECG_Spectral_BNN, ECG_Small_CBNN
+from bnns.ecg.ECG_BNN import ECG_BNN, ECG_CBNN, ECG_Spectral_BNN, ECG_Small_CBNN, ECG_CBNN_tanh, ECG_Spectral_BNN_tanh
 
 
 # Synthetic dataset models
@@ -76,3 +76,9 @@ def ECG_Small_CBNN_128(X, y=None, D_Y=None, sigma=None, subsample=None, prior_pr
 def ECG_Small_CBNN_32(X, y=None, D_Y=None, sigma=None, subsample=None, prior_probs=None):
     return ECG_Small_CBNN(X, y, width=32, subsample=subsample, prior_probs=prior_probs)
 
+# Debugging stuck posterior and slow CBNN/Spectral_BNN
+def ECG_CBNN_tanh_128(X, y=None, D_Y=None, sigma=None, subsample=None, prior_probs=None):
+    return ECG_CBNN_tanh(X, y, width=128, subsample=subsample, prior_probs=prior_probs)
+
+def ECG_Spectral_BNN_tanh_128(X, y=None, D_Y=None, sigma=None, subsample=None, prior_probs=None):
+    return ECG_Spectral_BNN_tanh(X, y, width=128, subsample=subsample, prior_probs=prior_probs)

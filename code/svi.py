@@ -24,6 +24,8 @@ LEARNING_RATES_PER_MODEL = {
     "ECG_CBNN_128": 3e-3,
     "ECG_Spectral_BNN_128": 3e-2,
     "ECG_Small_CBNN_128": 5e-4,
+    "ECG_Spectral_BNN_tanh_128": 3e-2,
+    "ECG_CBNN_tanh_128": 3e-2,
 }
 
 def run_svi(model, dataset, split, steps, args) -> SVIRunResult:
