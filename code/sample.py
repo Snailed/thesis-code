@@ -20,6 +20,9 @@ def run_hmc(model, dataset, split, args, initial_point=None):
             model, 
             init_strategy=init_strategy,
             max_tree_depth=args.tree_depth,
+            step_size=args.step_size,
+            adapt_step_size=True if args.step_size == 1 else False,
+            dense_mass=[("w0",),("w1",),("w4",)] if args.dense_mass_matrix else False
         )
     mcmc = MCMC(
         kernel, 

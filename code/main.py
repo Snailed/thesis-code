@@ -125,6 +125,8 @@ def main():
     parser_sample.add_argument("--init_map_iters", default=None, type=int, help="If provided, use MAP estimate as initial point")
     parser_sample.add_argument("--resample-ecg", action="store_true", help="Should ECG data be resampled?")
     parser_sample.add_argument("--tree-depth", default=10, type=int, help="Max tree depth of doubling scheme for NUTS")
+    parser_sample.add_argument("--step-size", default=1, type=float, help="Step size. If None then use adaptive step sizes from NUTS")
+    parser_sample.add_argument("--dense-mass-matrix", default=False, help="Should use dense mass matrix. Default: Diagonal.")
 
     parser_sample.set_defaults(func=sample)
 
