@@ -29,20 +29,47 @@ def is_hermitian(v):
 def S(k, alpha=1e2, beta=1e5):
     return beta*jnp.exp(-(1/alpha) * k**2)
 
+#def sample_w_hat(i: int, n: int, S=S, alpha=1e2, beta=1e5):
+#    w_hat = jnp.zeros(n, dtype=jnp.complex64)
+#
+#    normals = numpyro.sample(f"w_hat_{i}_normals", dist.Normal(0.0, 1.0).expand((n,)))
+#    w_hat = w_hat.at[0].set(normals[0]) # w^ <- N(0, 1)
+#    for k in range(1, n//2):
+#        real = normals[2*k] * S(k, alpha=alpha, beta=beta) * 0.5
+#        img = normals[2*k+1] * S(k, alpha=alpha, beta=beta) * 0.5
+#        w_hat = w_hat.at[k].set(real + 1j * img)
+#        w_hat = w_hat.at[n-k].set(real - 1j * img)
+#    if n % 2 == 0:
+#        w_hat = w_hat.at[n//2].set(normals[n-1] * S(n//2))# Nyquist
+#    #assert is_hermitian(w_hat), "The generated vector is not hermitian"
+#    #assert jnp.allclose(jnp.imag(jnp.fft.ifft(w_hat)), 0, atol=1e-3)
+#    w_hat = numpyro.deterministic(f"w_hat_{i}", w_hat / jnp.sqrt(n))
+#    return w_hat
+
+@jax.jit
+def inner_sample_w_hat(normals, S_k):
+    n = normals.shape[-1]
+    k = jnp.arange(n)
+
+    real = normals[2 * k] * S_k * 0.5
+    img = normals[2 * k + 1] * S_k * 0.5
+
+    w_hat_real = jnp.where((k > 0) & (k < n // 2), real, 0.0)
+    w_hat_img = jnp.where((k > 0) & (k < n // 2), img, 0.0)
+
+    w_hat = w_hat_real + 1j * w_hat_img
+    w_hat = w_hat.at[0].set(normals[0] * S_k[0])
+    w_hat = w_hat.at[n // 2].set(jnp.where(n % 2 == 0, normals[n - 1] * S_k[n // 2], 0.0))
+    w_hat = w_hat.at[n - k].set(jnp.where((k > 0) & (k < n // 2), w_hat_real - 1j * w_hat_img, w_hat[n - k]))
+
+    return w_hat
+
 def sample_w_hat(i: int, n: int, S=S, alpha=1e2, beta=1e5):
     w_hat = jnp.zeros(n, dtype=jnp.complex64)
 
     normals = numpyro.sample(f"w_hat_{i}_normals", dist.Normal(0.0, 1.0).expand((n,)))
-    w_hat = w_hat.at[0].set(normals[0]) # w^ <- N(0, 1)
-    for k in range(1, n//2):
-        real = normals[2*k] * S(k, alpha=alpha, beta=beta) * 0.5
-        img = normals[2*k+1] * S(k, alpha=alpha, beta=beta) * 0.5
-        w_hat = w_hat.at[k].set(real + 1j * img)
-        w_hat = w_hat.at[n-k].set(real - 1j * img)
-    if n % 2 == 0:
-        w_hat = w_hat.at[n//2].set(normals[n-1] * S(n//2))# Nyquist
-    #assert is_hermitian(w_hat), "The generated vector is not hermitian"
-    #assert jnp.allclose(jnp.imag(jnp.fft.ifft(w_hat)), 0, atol=1e-3)
+    S_k = S(jnp.arange(n), alpha=alpha, beta=beta)
+    w_hat = inner_sample_w_hat(normals, S_k)
     w_hat = numpyro.deterministic(f"w_hat_{i}", w_hat / jnp.sqrt(n))
     return w_hat
 
