@@ -64,12 +64,20 @@ def load_samples():
 
                 post_draws = inference_data.to_dict()["posterior"]
                 post_draws.pop("y_probs", None)
+
+                with open(os.path.join(path, split.replace(".nc", "_metadata.dill")), "rb") as f:
+                    metadata = dill.load(f)
+
                 samples.append({
                     "model": model,
                     "method": method,
                     "model": model_name,
                     "split": split_ind,
-                    "post_draws": post_draws
+                    "post_draws": post_draws,
+                    "time_spanned": metadata["time_spanned"],
+                    "accept_prob": metadata["accept_prob"],
+                    "step_size": metadata["adapt_state.step_size"],
+                    "num_steps": metadata["num_steps"],
                 })
     return samples
 
@@ -147,14 +155,17 @@ def produce_table(samples):
     sample_dict = samples[bnn_index]
     model = getattr(bnns.model_configs, sample_dict["model"])
     post_draws = sample_dict["post_draws"]
+    if "Spectral" in sample_dict["model"]:
+        for i in range(len([key in post_draws for key in post_draws.keys() if "w_hat" in key])):
+            post_draws.pop(f"w_hat_{i}", None)
     #baseline_nll_train = compute_nlls(model, post_draws, X_train, y_train, batch_ndims)
     nll_baseline = compute_nlls(model, post_draws, X_test, y_test, batch_ndims)
     accuracy_baseline = compute_accuracy(model, post_draws, X_test, y_test, batch_ndims)
     assert accuracy_baseline.shape == (3000,), f"Accuracy has shape {accuracy_baseline.shape}"
     
     summary_baseline = summary(post_draws)
-    ess_baseline = jnp.array([jnp.nanmean(value["n_eff"]) for _, value in summary.items()])
-    rhat_baseline = jnp.array([jnp.nanmean(value["r_hat"]) for _, value in summary.items()])
+    ess_baseline = jnp.array([jnp.nanmean(value["n_eff"]) for _, value in summary_baseline.items()])
+    rhat_baseline = jnp.array([jnp.nanmean(value["r_hat"]) for _, value in summary_baseline.items()])
     time_baseline = sample_dict.get("time_spanned", None)
     ess_per_s_baseline = ess_baseline / time_baseline
 
@@ -173,13 +184,16 @@ def produce_table(samples):
             ess_per_s_comparison = ess_per_s_baseline
         else:
             post_draws = sample_dict["post_draws"]
+            if "Spectral" in sample_dict["model"]:
+                for i in range(len([key in post_draws for key in post_draws.keys() if "w_hat" in key])):
+                    post_draws.pop(f"w_hat_{i}", None)
             nll_comparison = compute_nlls(model, post_draws, X_test, y_test, batch_ndims)
             accuracy_comparison = compute_accuracy(model, post_draws, X_test, y_test, batch_ndims)
             time_comparison = sample_dict.get("time_spanned", None)
 
-            summary = summary(post_draws)
-            ess_comparison = jnp.array([jnp.nanmean(value["n_eff"]) for _, value in summary.items()])
-            rhat_comparison = jnp.array([jnp.nanmean(value["r_hat"]) for _, value in summary.items()])
+            summary_comparison = summary(post_draws)
+            ess_comparison = jnp.array([jnp.nanmean(value["n_eff"]) for _, value in summary_comparison.items()])
+            rhat_comparison = jnp.array([jnp.nanmean(value["r_hat"]) for _, value in summary_comparison.items()])
             ess_per_s_comparison = ess_comparison / time_comparison
         accept_prob = sample_dict.get("accept_prob", None)
 
@@ -206,9 +220,10 @@ def produce_table(samples):
             "model": sample_dict["model"],
             "dataset": "ECG",
             "NLL": bold_if_significant(f"{nll_comparison.mean() : .3f}\\pm{nll_comparison.std() : .3f}", nll_better, False),
-            "Accuracy": bold_if_significant(f"{accuracy_comparison.mean() : .3f}\\% \\pm{accuracy_comparison.std() : .3f} \\%", accuracy_better, False),
-            "Time": bold_if_significant(f"{time_comparison.mean() : .3f}\\% \\pm{time_comparison.std() : .3f} \\%", time_better, False),
+            "Accuracy": bold_if_significant(f"{accuracy_comparison.mean()*100 : .3f}\\% \\pm{accuracy_comparison.std() * 100 : .3f} \\%", accuracy_better, False),
+            "Time": bold_if_significant(f"{float(time_comparison) : .3f}", time_better, False),
             "Speedup": f"{time_comparison / time_baseline : .3f}",
+            "Accept prob": f"{float(accept_prob.mean()) : .3f}" if accept_prob is not None else "N/A",
             "ESS": bold_if_significant(f"{ess_comparison.mean() : .3f}\\pm{ess_comparison.std() : .3f}", ess_better, False),
             "R-hat": bold_if_significant(f"{rhat_comparison.mean() : .3f}\\pm{rhat_comparison.std() : .3f}", rhat_better, False),
             "ESS/s": bold_if_significant(f"{ess_per_s_comparison.mean() : .3f}\\pm{ess_per_s_comparison.std() : .3f}", ess_per_s_better, False)
