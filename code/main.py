@@ -1,5 +1,6 @@
 import argparse
 import os
+import jax
 from datetime import datetime
 from datasets.synthetic import SyntheticDataset
 from datasets.uci import UCIDataset, dataset_names
@@ -47,6 +48,9 @@ def _load_models(args):
 
 def sample(args):
     set_platform(args.device)
+    if args.no_jit:
+        print("Disabling JIT")
+        jax.config.update("jax_disable_jit", args.no_jit)
     _mkdir_sample_dir(args)
     datasets = _load_datasets(args)
     models, model_names = _load_models(args)
@@ -127,6 +131,7 @@ def main():
     parser_sample.add_argument("--tree-depth", default=10, type=int, help="Max tree depth of doubling scheme for NUTS")
     parser_sample.add_argument("--step-size", default=1, type=float, help="Step size. If None then use adaptive step sizes from NUTS")
     parser_sample.add_argument("--dense-mass-matrix", default=False, help="Should use dense mass matrix. Default: Diagonal.")
+    parser_sample.add_argument("--no_jit", action="store_true", help="Disable JIT?")
 
     parser_sample.set_defaults(func=sample)
 
